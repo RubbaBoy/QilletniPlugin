@@ -1,0 +1,179 @@
+// Qilletni.bnf — Full grammar mirroring reference/QilletniParser.g4
+// Generated parser/PSI will be produced via Grammar-Kit; lexer provided by JFlex file.
+{
+  parserClass="dev.qilletni.intellij.parser.QilletniParser"
+  psiClassPrefix=""
+  psiImplClassSuffix="Impl"
+  psiPackage="dev.qilletni.intellij.psi"
+  psiImplPackage="dev.qilletni.intellij.psi.impl"
+  elementTypeHolderClass="dev.qilletni.intellij.psi.QilletniTypes"
+
+  tokens = [
+    IMPORT AS
+    LINE_COMMENT DOC_COMMENT BLOCK_COMMENT
+    INCREMENT DECREMENT PLUS_EQUALS MINUS_EQUALS MINUS PLUS STAR FLOOR_DIV DIV MOD
+    ANDAND OROR
+    WEIGHTS_KEYWORD
+    ANY_TYPE INT_TYPE DOUBLE_TYPE STRING_TYPE BOOLEAN_TYPE COLLECTION_TYPE SONG_TYPE ALBUM_TYPE JAVA_TYPE
+    ENTITY EMPTY NEW
+    ORDER_PARAM LIMIT_PARAM LOOP_PARAM
+    IS_KEYWORD IF_KEYWORD ELSE_KEYWORD FOR_KEYWORD RANGE_INFINITY COLON
+    PLAY PROVIDER FUNCTION_DEF STATIC NATIVE ON
+    DOT DOUBLE_DOT
+    NEWLINE WS
+    BOOL REL_OP
+    LEFT_SBRACKET RIGHT_SBRACKET LEFT_PAREN RIGHT_PAREN LEFT_CBRACKET RIGHT_CBRACKET
+    COMMA ASSIGN NOT
+    RETURN
+    BY CREATED
+    STRING ID INT DOUBLE
+    WEIGHT_PIPE COLLECTION_ORDER LIMIT_UNIT WEIGHT_UNIT
+  ]
+
+}
+
+file ::= prog
+
+// program structure
+prog ::= import_file* running*
+
+import_file ::= IMPORT STRING (AS ID)?
+
+running ::= body_stmt | function_def | NEWLINE
+
+// expressions
+expr ::= logical_or_expr
+
+logical_or_expr ::= logical_and_expr (OROR logical_and_expr)*
+
+logical_and_expr ::= relational_expr (ANDAND relational_expr)*
+
+relational_expr ::= additive_expr (REL_OP additive_expr)?
+
+additive_expr ::= multiplicative_expr ((PLUS|MINUS) multiplicative_expr)*
+
+multiplicative_expr ::= unary_expr ((STAR|FLOOR_DIV|DIV|MOD) unary_expr)*
+
+unary_expr ::= NOT unary_expr
+             | (INCREMENT|DECREMENT)? postfix_expr (LEFT_SBRACKET expr RIGHT_SBRACKET)? immutable_postfix_expr_suffix?
+
+postfix_expr ::= primary_expr (DOT postfix_suffix)*
+
+postfix_suffix ::= function_call | ID
+
+immutable_postfix_expr_suffix ::= (INCREMENT|DECREMENT) | ((PLUS_EQUALS|MINUS_EQUALS) expr)
+
+primary_expr ::= LEFT_PAREN expr RIGHT_PAREN
+               | function_call
+               | BOOL
+               | list_expression
+               | entity_initialize
+               | str_expr
+               | int_expr
+               | double_expr
+               | collection_expr
+               | song_expr
+               | album_expr
+               | weights_expr
+               | java_expr
+               | is_expr
+               | ID
+
+int_expr ::= INT | INT_TYPE LEFT_PAREN expr RIGHT_PAREN
+
+double_expr ::= DOUBLE | DOUBLE_TYPE LEFT_PAREN expr RIGHT_PAREN
+
+str_expr ::= STRING | STRING_TYPE LEFT_PAREN expr RIGHT_PAREN
+
+collection_expr ::= collection_url_or_name_pair order_define? weights_define?
+                  | COLLECTION_TYPE LEFT_PAREN list_expression RIGHT_PAREN order_define? weights_define?
+                  | STRING
+
+order_define ::= ORDER_PARAM LEFT_SBRACKET COLLECTION_ORDER RIGHT_SBRACKET
+
+weights_define ::= WEIGHTS_KEYWORD LEFT_SBRACKET (ID | function_call) RIGHT_SBRACKET
+
+song_expr ::= song_url_or_name_pair | STRING
+
+album_expr ::= album_url_or_name_pair | STRING
+
+song_url_or_name_pair ::= STRING (SONG_TYPE)? BY STRING
+
+collection_url_or_name_pair ::= STRING COLLECTION_TYPE BY STRING
+
+album_url_or_name_pair ::= STRING ALBUM_TYPE BY STRING
+
+weights_expr ::= single_weight+
+
+single_weight ::= WEIGHT_PIPE weight_amount expr
+
+list_expression ::= (ANY_TYPE|INT_TYPE|DOUBLE_TYPE|STRING_TYPE|BOOLEAN_TYPE|COLLECTION_TYPE|SONG_TYPE|WEIGHTS_KEYWORD|ALBUM_TYPE|JAVA_TYPE|ID)?
+                    LEFT_SBRACKET expr_list? RIGHT_SBRACKET
+
+is_expr ::= ID IS_KEYWORD ((ANY_TYPE|INT_TYPE|DOUBLE_TYPE|STRING_TYPE|BOOLEAN_TYPE|COLLECTION_TYPE|SONG_TYPE|WEIGHTS_KEYWORD|ALBUM_TYPE|JAVA_TYPE|ID)? (LEFT_SBRACKET RIGHT_SBRACKET)?)
+
+java_expr ::= EMPTY
+
+function_call ::= ID LEFT_PAREN expr_list? RIGHT_PAREN
+
+expr_list ::= expr (COMMA expr)*
+
+body_stmt ::= if_stmt | for_stmt | stmt | expr
+
+return_stmt ::= RETURN expr
+
+// Allow zero or more body statements optionally ending with a return
+body ::= body_stmt* return_stmt?
+
+asmt ::= (ANY_TYPE|INT_TYPE|DOUBLE_TYPE|STRING_TYPE|BOOLEAN_TYPE|COLLECTION_TYPE|SONG_TYPE|WEIGHTS_KEYWORD|ALBUM_TYPE|JAVA_TYPE|ID)
+          (LEFT_SBRACKET RIGHT_SBRACKET)? ID ASSIGN expr
+       | ID LEFT_SBRACKET int_expr RIGHT_SBRACKET ASSIGN expr
+       | ID ASSIGN expr
+       | expr DOT ID ASSIGN expr
+       | expr DOUBLE_DOT ID ASSIGN expr
+       | asmt DOUBLE_DOT ID ASSIGN expr
+
+collection_limit ::= LIMIT_PARAM LEFT_SBRACKET limit_amount RIGHT_SBRACKET
+
+play_stmt ::= PLAY (ID|expr) collection_limit? LOOP_PARAM?
+
+provider_stmt ::= PROVIDER str_expr (LEFT_CBRACKET body RIGHT_CBRACKET)?
+
+function_def ::= (DOC_COMMENT? STATIC? FUNCTION_DEF ID LEFT_PAREN function_def_params RIGHT_PAREN function_on_type? LEFT_CBRACKET body RIGHT_CBRACKET
+               | DOC_COMMENT? NATIVE STATIC? FUNCTION_DEF ID LEFT_PAREN function_def_params RIGHT_PAREN function_on_type?) {elementType=FUNCTION_DEFINITION}
+
+function_on_type ::= ON (INT_TYPE|STRING_TYPE|BOOLEAN_TYPE|COLLECTION_TYPE|SONG_TYPE|ALBUM_TYPE|WEIGHTS_KEYWORD|ID)
+
+function_def_params ::= (ID (COMMA ID)*)?
+
+if_stmt ::= IF_KEYWORD LEFT_PAREN expr RIGHT_PAREN LEFT_CBRACKET body RIGHT_CBRACKET elseif_list else_body
+
+else_body ::= ELSE_KEYWORD LEFT_CBRACKET body RIGHT_CBRACKET | /*empty*/
+
+elseif_list ::= (ELSE_KEYWORD IF_KEYWORD LEFT_PAREN expr RIGHT_PAREN LEFT_CBRACKET body RIGHT_CBRACKET)*
+
+for_stmt ::= FOR_KEYWORD LEFT_PAREN for_expr RIGHT_PAREN LEFT_CBRACKET body RIGHT_CBRACKET
+
+for_expr ::= expr | range_expr | foreach_range
+
+range_expr ::= ID DOUBLE_DOT (expr | RANGE_INFINITY)
+
+foreach_range ::= ID COLON expr
+
+entity_def ::= DOC_COMMENT? ENTITY ID LEFT_CBRACKET entity_body RIGHT_CBRACKET
+
+entity_body ::= entity_property_declaration* entity_constructor? function_def*
+
+entity_property_declaration ::= DOC_COMMENT?
+                                (ANY_TYPE|INT_TYPE|DOUBLE_TYPE|STRING_TYPE|BOOLEAN_TYPE|COLLECTION_TYPE|SONG_TYPE|WEIGHTS_KEYWORD|ALBUM_TYPE|JAVA_TYPE|ID)
+                                (LEFT_SBRACKET RIGHT_SBRACKET)? ID (ASSIGN expr)?
+
+entity_constructor ::= DOC_COMMENT? ID LEFT_PAREN function_def_params RIGHT_PAREN
+
+entity_initialize ::= NEW ID LEFT_PAREN expr_list? RIGHT_PAREN
+
+stmt ::= play_stmt | asmt | entity_def | provider_stmt
+
+weight_amount ::= INT WEIGHT_UNIT
+
+limit_amount ::= INT LIMIT_UNIT?
