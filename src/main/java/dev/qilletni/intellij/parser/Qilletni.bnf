@@ -2,15 +2,23 @@
 // Generated parser/PSI will be produced via Grammar-Kit; lexer provided by JFlex file.
 {
   parserClass="dev.qilletni.intellij.parser.QilletniParser"
-  psiClassPrefix=""
+  psiClassPrefix="Qilletni"
   psiImplClassSuffix="Impl"
   psiPackage="dev.qilletni.intellij.psi"
   psiImplPackage="dev.qilletni.intellij.psi.impl"
+
   elementTypeHolderClass="dev.qilletni.intellij.psi.QilletniTypes"
+  elementTypeClass="dev.qilletni.intellij.psi.QilletniElementType"
+  tokenTypeClass="dev.qilletni.intellij.psi.QilletniTokenType"
+  psiImplUtilClass="dev.qilletni.intellij.psi.impl.QilletniPsiImplUtil"
+
+  extends(".*")="dev.qilletni.intellij.psi.impl.QilletniPsiElementBase"
 
   tokens = [
     IMPORT AS
-    LINE_COMMENT DOC_COMMENT BLOCK_COMMENT
+    LINE_COMMENT
+    DOC_COMMENT
+    BLOCK_COMMENT
     INCREMENT DECREMENT PLUS_EQUALS MINUS_EQUALS MINUS PLUS STAR FLOOR_DIV DIV MOD
     ANDAND OROR
     WEIGHTS_KEYWORD
@@ -39,7 +47,7 @@ prog ::= import_file* running*
 
 import_file ::= IMPORT STRING (AS ID)?
 
-running ::= body_stmt | function_def | NEWLINE
+running ::= body_stmt | function_def | BLOCK_COMMENT | LINE_COMMENT | NEWLINE
 
 // expressions
 expr ::= logical_or_expr

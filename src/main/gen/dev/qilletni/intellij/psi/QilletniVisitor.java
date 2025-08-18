@@ -7,163 +7,231 @@ import com.intellij.psi.PsiElement;
 
 public class QilletniVisitor extends PsiElementVisitor {
 
-  public void visitAdditiveExpr(@NotNull AdditiveExpr o) {
+  public void visitAdditiveExpr(@NotNull QilletniAdditiveExpr o) {
     visitPsiElement(o);
   }
 
-  public void visitAlbumExpr(@NotNull AlbumExpr o) {
+  public void visitAlbumExpr(@NotNull QilletniAlbumExpr o) {
     visitPsiElement(o);
   }
 
-  public void visitAlbumUrlOrNamePair(@NotNull AlbumUrlOrNamePair o) {
+  public void visitAlbumUrlOrNamePair(@NotNull QilletniAlbumUrlOrNamePair o) {
     visitPsiElement(o);
   }
 
-  public void visitAsmt(@NotNull Asmt o) {
+  public void visitAsmt(@NotNull QilletniAsmt o) {
     visitPsiElement(o);
   }
 
-  public void visitBody(@NotNull Body o) {
+  public void visitBody(@NotNull QilletniBody o) {
     visitPsiElement(o);
   }
 
-  public void visitBodyStmt(@NotNull BodyStmt o) {
+  public void visitBodyStmt(@NotNull QilletniBodyStmt o) {
     visitPsiElement(o);
   }
 
-  public void visitCollectionExpr(@NotNull CollectionExpr o) {
+  public void visitCollectionExpr(@NotNull QilletniCollectionExpr o) {
     visitPsiElement(o);
   }
 
-  public void visitCollectionLimit(@NotNull CollectionLimit o) {
+  public void visitCollectionLimit(@NotNull QilletniCollectionLimit o) {
     visitPsiElement(o);
   }
 
-  public void visitCollectionUrlOrNamePair(@NotNull CollectionUrlOrNamePair o) {
+  public void visitCollectionUrlOrNamePair(@NotNull QilletniCollectionUrlOrNamePair o) {
     visitPsiElement(o);
   }
 
-  public void visitDoubleExpr(@NotNull DoubleExpr o) {
+  public void visitDoubleExpr(@NotNull QilletniDoubleExpr o) {
     visitPsiElement(o);
   }
 
-  public void visitExpr(@NotNull Expr o) {
+  public void visitElseBody(@NotNull QilletniElseBody o) {
     visitPsiElement(o);
   }
 
-  public void visitExprList(@NotNull ExprList o) {
+  public void visitElseifList(@NotNull QilletniElseifList o) {
     visitPsiElement(o);
   }
 
-  public void visitFunctionCall(@NotNull FunctionCall o) {
+  public void visitEntityBody(@NotNull QilletniEntityBody o) {
     visitPsiElement(o);
   }
 
-  public void visitFunctionDef(@NotNull FunctionDef o) {
+  public void visitEntityConstructor(@NotNull QilletniEntityConstructor o) {
     visitPsiElement(o);
   }
 
-  public void visitImmutablePostfixExprSuffix(@NotNull ImmutablePostfixExprSuffix o) {
+  public void visitEntityDef(@NotNull QilletniEntityDef o) {
     visitPsiElement(o);
   }
 
-  public void visitImportFile(@NotNull ImportFile o) {
+  public void visitEntityInitialize(@NotNull QilletniEntityInitialize o) {
     visitPsiElement(o);
   }
 
-  public void visitIntExpr(@NotNull IntExpr o) {
+  public void visitEntityPropertyDeclaration(@NotNull QilletniEntityPropertyDeclaration o) {
     visitPsiElement(o);
   }
 
-  public void visitIsExpr(@NotNull IsExpr o) {
+  public void visitExpr(@NotNull QilletniExpr o) {
     visitPsiElement(o);
   }
 
-  public void visitJavaExpr(@NotNull JavaExpr o) {
+  public void visitExprList(@NotNull QilletniExprList o) {
     visitPsiElement(o);
   }
 
-  public void visitListExpression(@NotNull ListExpression o) {
+  public void visitForExpr(@NotNull QilletniForExpr o) {
     visitPsiElement(o);
   }
 
-  public void visitLogicalAndExpr(@NotNull LogicalAndExpr o) {
+  public void visitForStmt(@NotNull QilletniForStmt o) {
     visitPsiElement(o);
   }
 
-  public void visitLogicalOrExpr(@NotNull LogicalOrExpr o) {
+  public void visitForeachRange(@NotNull QilletniForeachRange o) {
     visitPsiElement(o);
   }
 
-  public void visitMultiplicativeExpr(@NotNull MultiplicativeExpr o) {
+  public void visitFunctionCall(@NotNull QilletniFunctionCall o) {
     visitPsiElement(o);
   }
 
-  public void visitOrderDefine(@NotNull OrderDefine o) {
+  public void visitFunctionDef(@NotNull QilletniFunctionDef o) {
     visitPsiElement(o);
   }
 
-  public void visitPlayStmt(@NotNull PlayStmt o) {
+  public void visitFunctionDefParams(@NotNull QilletniFunctionDefParams o) {
     visitPsiElement(o);
   }
 
-  public void visitPostfixExpr(@NotNull PostfixExpr o) {
+  public void visitFunctionOnType(@NotNull QilletniFunctionOnType o) {
     visitPsiElement(o);
   }
 
-  public void visitPostfixSuffix(@NotNull PostfixSuffix o) {
+  public void visitIfStmt(@NotNull QilletniIfStmt o) {
     visitPsiElement(o);
   }
 
-  public void visitPrimaryExpr(@NotNull PrimaryExpr o) {
+  public void visitImmutablePostfixExprSuffix(@NotNull QilletniImmutablePostfixExprSuffix o) {
     visitPsiElement(o);
   }
 
-  public void visitProg(@NotNull Prog o) {
+  public void visitImportFile(@NotNull QilletniImportFile o) {
     visitPsiElement(o);
   }
 
-  public void visitProviderStmt(@NotNull ProviderStmt o) {
+  public void visitIntExpr(@NotNull QilletniIntExpr o) {
     visitPsiElement(o);
   }
 
-  public void visitRelationalExpr(@NotNull RelationalExpr o) {
+  public void visitIsExpr(@NotNull QilletniIsExpr o) {
     visitPsiElement(o);
   }
 
-  public void visitReturnStmt(@NotNull ReturnStmt o) {
+  public void visitJavaExpr(@NotNull QilletniJavaExpr o) {
     visitPsiElement(o);
   }
 
-  public void visitRunning(@NotNull Running o) {
+  public void visitLimitAmount(@NotNull QilletniLimitAmount o) {
     visitPsiElement(o);
   }
 
-  public void visitSingleWeight(@NotNull SingleWeight o) {
+  public void visitListExpression(@NotNull QilletniListExpression o) {
     visitPsiElement(o);
   }
 
-  public void visitSongExpr(@NotNull SongExpr o) {
+  public void visitLogicalAndExpr(@NotNull QilletniLogicalAndExpr o) {
     visitPsiElement(o);
   }
 
-  public void visitSongUrlOrNamePair(@NotNull SongUrlOrNamePair o) {
+  public void visitLogicalOrExpr(@NotNull QilletniLogicalOrExpr o) {
     visitPsiElement(o);
   }
 
-  public void visitStrExpr(@NotNull StrExpr o) {
+  public void visitMultiplicativeExpr(@NotNull QilletniMultiplicativeExpr o) {
     visitPsiElement(o);
   }
 
-  public void visitUnaryExpr(@NotNull UnaryExpr o) {
+  public void visitOrderDefine(@NotNull QilletniOrderDefine o) {
     visitPsiElement(o);
   }
 
-  public void visitWeightsDefine(@NotNull WeightsDefine o) {
+  public void visitPlayStmt(@NotNull QilletniPlayStmt o) {
     visitPsiElement(o);
   }
 
-  public void visitWeightsExpr(@NotNull WeightsExpr o) {
+  public void visitPostfixExpr(@NotNull QilletniPostfixExpr o) {
+    visitPsiElement(o);
+  }
+
+  public void visitPostfixSuffix(@NotNull QilletniPostfixSuffix o) {
+    visitPsiElement(o);
+  }
+
+  public void visitPrimaryExpr(@NotNull QilletniPrimaryExpr o) {
+    visitPsiElement(o);
+  }
+
+  public void visitProg(@NotNull QilletniProg o) {
+    visitPsiElement(o);
+  }
+
+  public void visitProviderStmt(@NotNull QilletniProviderStmt o) {
+    visitPsiElement(o);
+  }
+
+  public void visitRangeExpr(@NotNull QilletniRangeExpr o) {
+    visitPsiElement(o);
+  }
+
+  public void visitRelationalExpr(@NotNull QilletniRelationalExpr o) {
+    visitPsiElement(o);
+  }
+
+  public void visitReturnStmt(@NotNull QilletniReturnStmt o) {
+    visitPsiElement(o);
+  }
+
+  public void visitRunning(@NotNull QilletniRunning o) {
+    visitPsiElement(o);
+  }
+
+  public void visitSingleWeight(@NotNull QilletniSingleWeight o) {
+    visitPsiElement(o);
+  }
+
+  public void visitSongExpr(@NotNull QilletniSongExpr o) {
+    visitPsiElement(o);
+  }
+
+  public void visitSongUrlOrNamePair(@NotNull QilletniSongUrlOrNamePair o) {
+    visitPsiElement(o);
+  }
+
+  public void visitStmt(@NotNull QilletniStmt o) {
+    visitPsiElement(o);
+  }
+
+  public void visitStrExpr(@NotNull QilletniStrExpr o) {
+    visitPsiElement(o);
+  }
+
+  public void visitUnaryExpr(@NotNull QilletniUnaryExpr o) {
+    visitPsiElement(o);
+  }
+
+  public void visitWeightAmount(@NotNull QilletniWeightAmount o) {
+    visitPsiElement(o);
+  }
+
+  public void visitWeightsDefine(@NotNull QilletniWeightsDefine o) {
+    visitPsiElement(o);
+  }
+
+  public void visitWeightsExpr(@NotNull QilletniWeightsExpr o) {
     visitPsiElement(o);
   }
 

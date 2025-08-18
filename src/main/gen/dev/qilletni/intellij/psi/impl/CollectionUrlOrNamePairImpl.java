@@ -8,10 +8,9 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static dev.qilletni.intellij.psi.QilletniTypes.*;
-import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import dev.qilletni.intellij.psi.*;
 
-public class CollectionUrlOrNamePairImpl extends ASTWrapperPsiElement implements CollectionUrlOrNamePair {
+public class CollectionUrlOrNamePairImpl extends QilletniPsiElementBase implements CollectionUrlOrNamePair {
 
   public CollectionUrlOrNamePairImpl(@NotNull ASTNode node) {
     super(node);

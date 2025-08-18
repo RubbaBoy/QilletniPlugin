@@ -8,10 +8,9 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static dev.qilletni.intellij.psi.QilletniTypes.*;
-import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import dev.qilletni.intellij.psi.*;
 
-public class RunningImpl extends ASTWrapperPsiElement implements Running {
+public class RunningImpl extends QilletniPsiElementBase implements Running {
 
   public RunningImpl(@NotNull ASTNode node) {
     super(node);
@@ -37,6 +36,18 @@ public class RunningImpl extends ASTWrapperPsiElement implements Running {
   @Nullable
   public FunctionDef getFunctionDef() {
     return findChildByClass(FunctionDef.class);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getBlockComment() {
+    return findChildByType(BLOCK_COMMENT);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getLineComment() {
+    return findChildByType(LINE_COMMENT);
   }
 
   @Override

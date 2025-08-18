@@ -9,5 +9,5 @@ import javax.swing.*;
 public final class QilletniIcons {
     private QilletniIcons() {}
 
-    public static final Icon FILE = IconLoader.getIcon("/META-INF/pluginIcon.svg", QilletniIcons.class);
+    public static final Icon FILE = IconLoader.getIcon("/icons/icon.svg", QilletniIcons.class);
 }

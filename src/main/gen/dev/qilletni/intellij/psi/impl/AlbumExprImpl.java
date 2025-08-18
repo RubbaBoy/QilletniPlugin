@@ -8,10 +8,9 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static dev.qilletni.intellij.psi.QilletniTypes.*;
-import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import dev.qilletni.intellij.psi.*;
 
-public class AlbumExprImpl extends ASTWrapperPsiElement implements AlbumExpr {
+public class AlbumExprImpl extends QilletniPsiElementBase implements AlbumExpr {
 
   public AlbumExprImpl(@NotNull ASTNode node) {
     super(node);

@@ -8,10 +8,9 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static dev.qilletni.intellij.psi.QilletniTypes.*;
-import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import dev.qilletni.intellij.psi.*;
 
-public class UnaryExprImpl extends ASTWrapperPsiElement implements UnaryExpr {
+public class UnaryExprImpl extends QilletniPsiElementBase implements UnaryExpr {
 
   public UnaryExprImpl(@NotNull ASTNode node) {
     super(node);

@@ -6,12 +6,13 @@ package dev.qilletni.intellij.lexer;
 import com.intellij.lexer.FlexLexer;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.TokenType;
+import dev.qilletni.intellij.psi.QilletniTypes;
 
 import static dev.qilletni.intellij.psi.QilletniTypes.*;
 
 %%
 %public
-%class _QilletniLexer
+%class QilletniLexer
 %implements FlexLexer
 %unicode
 %function advance
@@ -31,89 +32,88 @@ Ws = [ \t\r\n]+
 <YYINITIAL>{
   {Ws}                          { return TokenType.WHITE_SPACE; }
 
-  "//"[^\r\n]*                { return LINE_COMMENT; }
-  "/**"([^*]|\*+[^/])*"*/"    { return DOC_COMMENT; }
-  "/\*"([^*]|\*+[^/])*"\*/"   { return BLOCK_COMMENT; }
+  "//"[^\r\n]*                  { return QilletniTypes.LINE_COMMENT; }
+  "/\*\*"([^*]|\*+[^/])*"\*/"  { return QilletniTypes.DOC_COMMENT; }
+  "/\*"([^*]|\*+[^/])*"\*/"     { return QilletniTypes.BLOCK_COMMENT; }
 
   // Keywords and typed tokens
-  "import"                     { return IMPORT; }
-  "as"                         { return AS; }
-  "weights"                    { return WEIGHTS_KEYWORD; }
-  "any"                        { return ANY_TYPE; }
-  "int"                        { return INT_TYPE; }
-  "double"                     { return DOUBLE_TYPE; }
-  "string"                     { return STRING_TYPE; }
-  "boolean"                    { return BOOLEAN_TYPE; }
-  "collection"                 { return COLLECTION_TYPE; }
-  "song"                       { return SONG_TYPE; }
-  "album"                      { return ALBUM_TYPE; }
-  "java"                       { return JAVA_TYPE; }
-  "entity"                     { return ENTITY; }
-  "empty"                      { return EMPTY; }
-  "new"                        { return NEW; }
+  "import"                     { return QilletniTypes.IMPORT; }
+  "as"                         { return QilletniTypes.AS; }
+  "weights"                    { return QilletniTypes.WEIGHTS_KEYWORD; }
+  "any"                        { return QilletniTypes.ANY_TYPE; }
+  "int"                        { return QilletniTypes.INT_TYPE; }
+  "double"                     { return QilletniTypes.DOUBLE_TYPE; }
+  "string"                     { return QilletniTypes.STRING_TYPE; }
+  "boolean"                    { return QilletniTypes.BOOLEAN_TYPE; }
+  "collection"                 { return QilletniTypes.COLLECTION_TYPE; }
+  "song"                       { return QilletniTypes.SONG_TYPE; }
+  "album"                      { return QilletniTypes.ALBUM_TYPE; }
+  "java"                       { return QilletniTypes.JAVA_TYPE; }
+  "entity"                     { return QilletniTypes.ENTITY; }
+  "empty"                      { return QilletniTypes.EMPTY; }
+  "new"                        { return QilletniTypes.NEW; }
   "order"                      { yybegin(ORDER_MODE); return ORDER_PARAM; }
   "limit"                      { yybegin(LIMIT_MODE); return LIMIT_PARAM; }
-  "loop"                       { return LOOP_PARAM; }
-  "is"                         { return IS_KEYWORD; }
-  "if"                         { return IF_KEYWORD; }
-  "else"                       { return ELSE_KEYWORD; }
-  "for"                        { return FOR_KEYWORD; }
-  "infinity"                   { return RANGE_INFINITY; }
-  ":"                          { return COLON; }
-  "play"                       { return PLAY; }
-  "provider"                   { return PROVIDER; }
-  "fun"                        { return FUNCTION_DEF; }
-  "static"                     { return STATIC; }
-  "native"                     { return NATIVE; }
-  "on"                         { return ON; }
-  "return"                     { return RETURN; }
-  "by"                         { return BY; }
-  "created"                    { return CREATED; }
-  "true"|"false"              { return BOOL; }
+  "loop"                       { return QilletniTypes.LOOP_PARAM; }
+  "is"                         { return QilletniTypes.IS_KEYWORD; }
+  "if"                         { return QilletniTypes.IF_KEYWORD; }
+  "else"                       { return QilletniTypes.ELSE_KEYWORD; }
+  "for"                        { return QilletniTypes.FOR_KEYWORD; }
+  "infinity"                   { return QilletniTypes.RANGE_INFINITY; }
+  ":"                          { return QilletniTypes.COLON; }
+  "play"                       { return QilletniTypes.PLAY; }
+  "provider"                   { return QilletniTypes.PROVIDER; }
+  "fun"                        { return QilletniTypes.FUNCTION_DEF; }
+  "static"                     { return QilletniTypes.STATIC; }
+  "native"                     { return QilletniTypes.NATIVE; }
+  "on"                         { return QilletniTypes.ON; }
+  "return"                     { return QilletniTypes.RETURN; }
+  "by"                         { return QilletniTypes.BY; }
+  "true"|"false"              { return QilletniTypes.BOOL; }
 
   // Operators and punctuation
-  "++"                         { return INCREMENT; }
-  "--"                         { return DECREMENT; }
-  "+="                         { return PLUS_EQUALS; }
-  "-="                         { return MINUS_EQUALS; }
-  "-"                          { return MINUS; }
-  "+"                          { return PLUS; }
-  "*"                          { return STAR; }
-  "/~"                         { return FLOOR_DIV; }
-  "/"                          { return DIV; }
-  "%"                          { return MOD; }
-  "&&"                         { return ANDAND; }
-  "||"                         { return OROR; }
-  "."                          { return DOT; }
-  ".."                         { return DOUBLE_DOT; }
-  ">="                         { return REL_OP; }
-  "<="                         { return REL_OP; }
-  "=="                         { return REL_OP; }
-  "!="                         { return REL_OP; }
-  ">"                          { return REL_OP; }
-  "<"                          { return REL_OP; }
-  "("                          { return LEFT_PAREN; }
-  ")"                          { return RIGHT_PAREN; }
-  "["                          { return LEFT_SBRACKET; }
-  "]"                          { return RIGHT_SBRACKET; }
-  "{"                          { return LEFT_CBRACKET; }
-  "}"                          { return RIGHT_CBRACKET; }
-  ","                          { return COMMA; }
-  "="                          { return ASSIGN; }
-  "!"                          { return NOT; }
+  "++"                         { return QilletniTypes.INCREMENT; }
+  "--"                         { return QilletniTypes.DECREMENT; }
+  "+="                         { return QilletniTypes.PLUS_EQUALS; }
+  "-="                         { return QilletniTypes.MINUS_EQUALS; }
+  "-"                          { return QilletniTypes.MINUS; }
+  "+"                          { return QilletniTypes.PLUS; }
+  "*"                          { return QilletniTypes.STAR; }
+  "/~"                         { return QilletniTypes.FLOOR_DIV; }
+  "/"                          { return QilletniTypes.DIV; }
+  "%"                          { return QilletniTypes.MOD; }
+  "&&"                         { return QilletniTypes.ANDAND; }
+  "||"                         { return QilletniTypes.OROR; }
+  "."                          { return QilletniTypes.DOT; }
+  ".."                         { return QilletniTypes.DOUBLE_DOT; }
+  ">="                         { return QilletniTypes.REL_OP; }
+  "<="                         { return QilletniTypes.REL_OP; }
+  "=="                         { return QilletniTypes.REL_OP; }
+  "!="                         { return QilletniTypes.REL_OP; }
+  ">"                          { return QilletniTypes.REL_OP; }
+  "<"                          { return QilletniTypes.REL_OP; }
+  "("                          { return QilletniTypes.LEFT_PAREN; }
+  ")"                          { return QilletniTypes.RIGHT_PAREN; }
+  "["                          { return QilletniTypes.LEFT_SBRACKET; }
+  "]"                          { return QilletniTypes.RIGHT_SBRACKET; }
+  "{"                          { return QilletniTypes.LEFT_CBRACKET; }
+  "}"                          { return QilletniTypes.RIGHT_CBRACKET; }
+  ","                          { return QilletniTypes.COMMA; }
+  "="                          { return QilletniTypes.ASSIGN; }
+  "!"                          { return QilletniTypes.NOT; }
 
   // Weight pipe starts WEIGHT_MODE
-  "|!" | "|~" | "|"           { yybegin(WEIGHT_MODE); return WEIGHT_PIPE; }
+  "|!" | "|~" | "|"           { yybegin(WEIGHT_MODE); return QilletniTypes.WEIGHT_PIPE; }
 
   // Strings: enter STR mode
   "\""                        { yybegin(STR); /* consume content in STR, emit STRING on close */ }
 
   // Numbers
-  {Minus}?{Digits}              { return INT; }
-  {Minus}?({Digits}"D"|{Digits}"."{Digits}"D"?) { return DOUBLE; }
+  {Minus}?{Digits}              { return QilletniTypes.INT; }
+  {Minus}?({Digits}"D"|{Digits}"."{Digits}"D"?) { return QilletniTypes.DOUBLE; }
 
   // Identifier
-  {IdStart}{IdPart}*            { return ID; }
+  {IdStart}{IdPart}*            { return QilletniTypes.ID; }
 
   .                              { return TokenType.BAD_CHARACTER; }
 }
@@ -122,33 +122,33 @@ Ws = [ \t\r\n]+
 <STR>{
   "\\\""                      { /* escaped quote, continue */ }
   "\\".                        { /* any escape sequence, continue */ }
-  [^"\\]+                      { /* text, continue */ }
-  "\""                        { yybegin(YYINITIAL); return STRING; }
+  [^\n\r\"\\]+               { /* text, continue */ }
+  "\""                        { yybegin(YYINITIAL); return QilletniTypes.STRING; }
 }
 
 // ORDER mode for collection order brackets
 <ORDER_MODE>{
   {Ws}                         { return TokenType.WHITE_SPACE; }
-  "["                         { return LEFT_SBRACKET; }
-  "sequential"|"shuffle"      { return COLLECTION_ORDER; }
-  "]"                         { yybegin(YYINITIAL); return RIGHT_SBRACKET; }
+  "["                         { return QilletniTypes.LEFT_SBRACKET; }
+  "sequential"|"shuffle"      { return QilletniTypes.COLLECTION_ORDER; }
+  "]"                         { yybegin(YYINITIAL); return QilletniTypes.RIGHT_SBRACKET; }
   .                            { return TokenType.BAD_CHARACTER; }
 }
 
 // LIMIT mode for limit amounts
 <LIMIT_MODE>{
   {Ws}                         { return TokenType.WHITE_SPACE; }
-  "["                         { return LEFT_SBRACKET; }
+  "["                         { return QilletniTypes.LEFT_SBRACKET; }
   "]"                         { yybegin(YYINITIAL); return RIGHT_SBRACKET; }
-  {Digits}                     { return INT; }
-  "s"|"m"|"h"                 { return LIMIT_UNIT; }
+  {Digits}                     { return QilletniTypes.INT; }
+  "s"|"m"|"h"                 { return QilletniTypes.LIMIT_UNIT; }
   .                            { return TokenType.BAD_CHARACTER; }
 }
 
 // WEIGHT mode for weight_amount and unit, then pop
 <WEIGHT_MODE>{
   {Ws}                         { return TokenType.WHITE_SPACE; }
-  {Minus}?{Digits}             { return INT; }
-  "x"|"%"                     { yybegin(YYINITIAL); return WEIGHT_UNIT; }
+  {Minus}?{Digits}             { return QilletniTypes.INT; }
+  "x"|"%"                     { yybegin(YYINITIAL); return QilletniTypes.WEIGHT_UNIT; }
   .                            { return TokenType.BAD_CHARACTER; }
 }

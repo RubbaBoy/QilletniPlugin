@@ -8,10 +8,9 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static dev.qilletni.intellij.psi.QilletniTypes.*;
-import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import dev.qilletni.intellij.psi.*;
 
-public class EntityBodyImpl extends ASTWrapperPsiElement implements EntityBody {
+public class EntityBodyImpl extends QilletniPsiElementBase implements EntityBody {
 
   public EntityBodyImpl(@NotNull ASTNode node) {
     super(node);

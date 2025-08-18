@@ -1561,13 +1561,15 @@ public class QilletniParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // body_stmt | function_def | NEWLINE
+  // body_stmt | function_def | BLOCK_COMMENT | LINE_COMMENT | NEWLINE
   public static boolean running(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "running")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, RUNNING, "<running>");
     r = body_stmt(b, l + 1);
     if (!r) r = function_def(b, l + 1);
+    if (!r) r = consumeToken(b, BLOCK_COMMENT);
+    if (!r) r = consumeToken(b, LINE_COMMENT);
     if (!r) r = consumeToken(b, NEWLINE);
     exit_section_(b, l, m, r, false, null);
     return r;

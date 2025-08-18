@@ -14,6 +14,12 @@ public interface Running extends PsiElement {
   FunctionDef getFunctionDef();
 
   @Nullable
+  PsiElement getBlockComment();
+
+  @Nullable
+  PsiElement getLineComment();
+
+  @Nullable
   PsiElement getNewline();
 
 }

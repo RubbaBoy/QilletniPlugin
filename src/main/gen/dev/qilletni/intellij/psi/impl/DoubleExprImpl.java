@@ -8,10 +8,9 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static dev.qilletni.intellij.psi.QilletniTypes.*;
-import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import dev.qilletni.intellij.psi.*;
 
-public class DoubleExprImpl extends ASTWrapperPsiElement implements DoubleExpr {
+public class DoubleExprImpl extends QilletniPsiElementBase implements DoubleExpr {
 
   public DoubleExprImpl(@NotNull ASTNode node) {
     super(node);
