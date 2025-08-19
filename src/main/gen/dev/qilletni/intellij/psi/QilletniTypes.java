@@ -12,6 +12,7 @@ public interface QilletniTypes {
   IElementType ALBUM_EXPR = new QilletniElementType("ALBUM_EXPR");
   IElementType ALBUM_URL_OR_NAME_PAIR = new QilletniElementType("ALBUM_URL_OR_NAME_PAIR");
   IElementType ASMT = new QilletniElementType("ASMT");
+  IElementType ASMT_BASE = new QilletniElementType("ASMT_BASE");
   IElementType BODY = new QilletniElementType("BODY");
   IElementType BODY_STMT = new QilletniElementType("BODY_STMT");
   IElementType COLLECTION_EXPR = new QilletniElementType("COLLECTION_EXPR");
@@ -40,6 +41,8 @@ public interface QilletniTypes {
   IElementType INT_EXPR = new QilletniElementType("INT_EXPR");
   IElementType IS_EXPR = new QilletniElementType("IS_EXPR");
   IElementType JAVA_EXPR = new QilletniElementType("JAVA_EXPR");
+  IElementType LHS_CORE = new QilletniElementType("LHS_CORE");
+  IElementType LHS_MEMBER = new QilletniElementType("LHS_MEMBER");
   IElementType LIMIT_AMOUNT = new QilletniElementType("LIMIT_AMOUNT");
   IElementType LIST_EXPRESSION = new QilletniElementType("LIST_EXPRESSION");
   IElementType LOGICAL_AND_EXPR = new QilletniElementType("LOGICAL_AND_EXPR");
@@ -113,7 +116,6 @@ public interface QilletniTypes {
   IElementType MOD = new QilletniTokenType("MOD");
   IElementType NATIVE = new QilletniTokenType("NATIVE");
   IElementType NEW = new QilletniTokenType("NEW");
-  IElementType NEWLINE = new QilletniTokenType("NEWLINE");
   IElementType NOT = new QilletniTokenType("NOT");
   IElementType ON = new QilletniTokenType("ON");
   IElementType ORDER_PARAM = new QilletniTokenType("ORDER_PARAM");
@@ -151,6 +153,9 @@ public interface QilletniTypes {
       }
       else if (type == ASMT) {
         return new QilletniAsmtImpl(node);
+      }
+      else if (type == ASMT_BASE) {
+        return new QilletniAsmtBaseImpl(node);
       }
       else if (type == BODY) {
         return new QilletniBodyImpl(node);
@@ -235,6 +240,12 @@ public interface QilletniTypes {
       }
       else if (type == JAVA_EXPR) {
         return new QilletniJavaExprImpl(node);
+      }
+      else if (type == LHS_CORE) {
+        return new QilletniLhsCoreImpl(node);
+      }
+      else if (type == LHS_MEMBER) {
+        return new QilletniLhsMemberImpl(node);
       }
       else if (type == LIMIT_AMOUNT) {
         return new QilletniLimitAmountImpl(node);

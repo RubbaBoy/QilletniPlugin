@@ -28,7 +28,7 @@
     IS_KEYWORD IF_KEYWORD ELSE_KEYWORD FOR_KEYWORD RANGE_INFINITY COLON
     PLAY PROVIDER FUNCTION_DEF STATIC NATIVE ON
     DOT DOUBLE_DOT
-    NEWLINE WS
+    WS
     BOOL REL_OP
     LEFT_SBRACKET RIGHT_SBRACKET LEFT_PAREN RIGHT_PAREN LEFT_CBRACKET RIGHT_CBRACKET
     COMMA ASSIGN NOT
@@ -43,11 +43,12 @@
 file ::= prog
 
 // program structure
-prog ::= import_file* running*
+// Accept comments anywhere at the top level
+prog ::= (LINE_COMMENT | BLOCK_COMMENT | DOC_COMMENT | import_file | running)*
 
 import_file ::= IMPORT STRING (AS ID)?
 
-running ::= body_stmt | function_def | BLOCK_COMMENT | LINE_COMMENT | NEWLINE
+running ::= body_stmt | function_def
 
 // expressions
 expr ::= logical_or_expr
@@ -126,20 +127,31 @@ function_call ::= ID LEFT_PAREN expr_list? RIGHT_PAREN
 
 expr_list ::= expr (COMMA expr)*
 
-body_stmt ::= if_stmt | for_stmt | stmt | expr
+// Allow body statements to include any comment kind (including DOC_COMMENT)
+body_stmt ::= if_stmt | for_stmt | stmt | expr | LINE_COMMENT | BLOCK_COMMENT | DOC_COMMENT
 
 return_stmt ::= RETURN expr
 
 // Allow zero or more body statements optionally ending with a return
 body ::= body_stmt* return_stmt?
 
-asmt ::= (ANY_TYPE|INT_TYPE|DOUBLE_TYPE|STRING_TYPE|BOOLEAN_TYPE|COLLECTION_TYPE|SONG_TYPE|WEIGHTS_KEYWORD|ALBUM_TYPE|JAVA_TYPE|ID)
-          (LEFT_SBRACKET RIGHT_SBRACKET)? ID ASSIGN expr
-       | ID LEFT_SBRACKET int_expr RIGHT_SBRACKET ASSIGN expr
-       | ID ASSIGN expr
-       | expr DOT ID ASSIGN expr
-       | expr DOUBLE_DOT ID ASSIGN expr
-       | asmt DOUBLE_DOT ID ASSIGN expr
+// Allow any number of call segments before the final property chain
+lhs_core ::= primary_expr (DOT function_call)*
+
+// Require at least one final `. ID` (this prevents expr from eating that last ID)
+lhs_member ::= lhs_core (DOT ID)+
+
+// Base assignments (no left recursion)
+asmt_base ::=
+    (ANY_TYPE|INT_TYPE|DOUBLE_TYPE|STRING_TYPE|BOOLEAN_TYPE|COLLECTION_TYPE|SONG_TYPE|WEIGHTS_KEYWORD|ALBUM_TYPE|JAVA_TYPE|ID)
+      (LEFT_SBRACKET RIGHT_SBRACKET)? ID ASSIGN expr
+  | ID LEFT_SBRACKET int_expr RIGHT_SBRACKET ASSIGN expr
+  | ID ASSIGN expr
+  | lhs_member ASSIGN expr
+  | lhs_core DOUBLE_DOT ID ASSIGN expr
+
+// Chaining with `.. id = expr`
+asmt ::= asmt_base (DOUBLE_DOT ID ASSIGN expr)*
 
 collection_limit ::= LIMIT_PARAM LEFT_SBRACKET limit_amount RIGHT_SBRACKET
 

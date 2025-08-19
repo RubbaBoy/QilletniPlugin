@@ -10,14 +10,14 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static dev.qilletni.intellij.psi.QilletniTypes.*;
 import dev.qilletni.intellij.psi.*;
 
-public class QilletniAsmtImpl extends QilletniPsiElementBase implements QilletniAsmt {
+public class QilletniLhsMemberImpl extends QilletniPsiElementBase implements QilletniLhsMember {
 
-  public QilletniAsmtImpl(@NotNull ASTNode node) {
+  public QilletniLhsMemberImpl(@NotNull ASTNode node) {
     super(node);
   }
 
   public void accept(@NotNull QilletniVisitor visitor) {
-    visitor.visitAsmt(this);
+    visitor.visitLhsMember(this);
   }
 
   @Override
@@ -28,14 +28,8 @@ public class QilletniAsmtImpl extends QilletniPsiElementBase implements Qilletni
 
   @Override
   @NotNull
-  public QilletniAsmtBase getAsmtBase() {
-    return findNotNullChildByClass(QilletniAsmtBase.class);
-  }
-
-  @Override
-  @NotNull
-  public List<QilletniExpr> getExprList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, QilletniExpr.class);
+  public QilletniLhsCore getLhsCore() {
+    return findNotNullChildByClass(QilletniLhsCore.class);
   }
 
 }

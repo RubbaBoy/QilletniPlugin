@@ -25,10 +25,15 @@
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
         <fileType name="Qilletni" language="Qilletni" extensions="ql" implementationClass="dev.qilletni.intellij.QilletniFileType"/>
+
         <lang.parserDefinition language="Qilletni" implementationClass="dev.qilletni.intellij.QilletniParserDefinition"/>
+
         <lang.ast.factory language="Qilletni" implementationClass="dev.qilletni.intellij.QilletniASTFactory"/>
+
         <lang.syntaxHighlighterFactory language="Qilletni" implementationClass="dev.qilletni.intellij.QilletniSyntaxHighlighterFactory"/>
+
         <colorSettingsPage implementation="dev.qilletni.intellij.QilletniColorSettingsPage"/>
+
         <lang.documentationProvider language="Qilletni" implementationClass="dev.qilletni.intellij.QilletniDocumentationProvider"/>
     </extensions>
 </idea-plugin>

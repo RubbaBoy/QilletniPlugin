@@ -77,6 +77,8 @@ public final class QilletniSyntaxHighlighter implements SyntaxHighlighter {
 
         // Comments
         KEYS.put(QilletniTypes.DOC_COMMENT, arr(DOC_COMMENT));
+        KEYS.put(QilletniTypes.LINE_COMMENT, arr(LINE_COMMENT));
+        KEYS.put(QilletniTypes.BLOCK_COMMENT, arr(BLOCK_COMMENT));
 
         // Identifiers
         KEYS.put(QilletniTypes.ID, arr(IDENTIFIER));

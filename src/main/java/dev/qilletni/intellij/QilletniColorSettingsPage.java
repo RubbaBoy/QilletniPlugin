@@ -45,6 +45,7 @@ public final class QilletniColorSettingsPage implements ColorSettingsPage {
                 import "lib/common.ql" as common
                 
                 provider "spotify" {
+                  // init comment
                   fun init(on collection) {
                     return empty
                   }

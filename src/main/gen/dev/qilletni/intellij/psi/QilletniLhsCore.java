@@ -5,12 +5,12 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface QilletniRunning extends PsiElement {
+public interface QilletniLhsCore extends PsiElement {
 
-  @Nullable
-  QilletniBodyStmt getBodyStmt();
+  @NotNull
+  List<QilletniFunctionCall> getFunctionCallList();
 
-  @Nullable
-  QilletniFunctionDef getFunctionDef();
+  @NotNull
+  QilletniPrimaryExpr getPrimaryExpr();
 
 }

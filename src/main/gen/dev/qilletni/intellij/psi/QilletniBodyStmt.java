@@ -19,4 +19,13 @@ public interface QilletniBodyStmt extends PsiElement {
   @Nullable
   QilletniStmt getStmt();
 
+  @Nullable
+  PsiElement getBlockComment();
+
+  @Nullable
+  PsiElement getDocComment();
+
+  @Nullable
+  PsiElement getLineComment();
+
 }

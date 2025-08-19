@@ -23,6 +23,10 @@ public class QilletniVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
+  public void visitAsmtBase(@NotNull QilletniAsmtBase o) {
+    visitPsiElement(o);
+  }
+
   public void visitBody(@NotNull QilletniBody o) {
     visitPsiElement(o);
   }
@@ -132,6 +136,14 @@ public class QilletniVisitor extends PsiElementVisitor {
   }
 
   public void visitJavaExpr(@NotNull QilletniJavaExpr o) {
+    visitPsiElement(o);
+  }
+
+  public void visitLhsCore(@NotNull QilletniLhsCore o) {
+    visitPsiElement(o);
+  }
+
+  public void visitLhsMember(@NotNull QilletniLhsMember o) {
     visitPsiElement(o);
   }
 

@@ -50,4 +50,22 @@ public class QilletniBodyStmtImpl extends QilletniPsiElementBase implements Qill
     return findChildByClass(QilletniStmt.class);
   }
 
+  @Override
+  @Nullable
+  public PsiElement getBlockComment() {
+    return findChildByType(BLOCK_COMMENT);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getDocComment() {
+    return findChildByType(DOC_COMMENT);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getLineComment() {
+    return findChildByType(LINE_COMMENT);
+  }
+
 }

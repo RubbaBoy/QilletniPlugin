@@ -104,35 +104,67 @@ public class QilletniParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // (ANY_TYPE|INT_TYPE|DOUBLE_TYPE|STRING_TYPE|BOOLEAN_TYPE|COLLECTION_TYPE|SONG_TYPE|WEIGHTS_KEYWORD|ALBUM_TYPE|JAVA_TYPE|ID)
-  //           (LEFT_SBRACKET RIGHT_SBRACKET)? ID ASSIGN expr
-  //        | ID LEFT_SBRACKET int_expr RIGHT_SBRACKET ASSIGN expr
-  //        | ID ASSIGN expr
-  //        | expr DOT ID ASSIGN expr
-  //        | expr DOUBLE_DOT ID ASSIGN expr
-  //        | asmt DOUBLE_DOT ID ASSIGN expr
+  // asmt_base (DOUBLE_DOT ID ASSIGN expr)*
   public static boolean asmt(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "asmt")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ASMT, "<asmt>");
-    r = asmt_0(b, l + 1);
-    if (!r) r = asmt_1(b, l + 1);
-    if (!r) r = asmt_2(b, l + 1);
-    if (!r) r = asmt_3(b, l + 1);
-    if (!r) r = asmt_4(b, l + 1);
-    if (!r) r = asmt_5(b, l + 1);
+    r = asmt_base(b, l + 1);
+    r = r && asmt_1(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // (DOUBLE_DOT ID ASSIGN expr)*
+  private static boolean asmt_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "asmt_1")) return false;
+    while (true) {
+      int c = current_position_(b);
+      if (!asmt_1_0(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "asmt_1", c)) break;
+    }
+    return true;
+  }
+
+  // DOUBLE_DOT ID ASSIGN expr
+  private static boolean asmt_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "asmt_1_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeTokens(b, 0, DOUBLE_DOT, ID, ASSIGN);
+    r = r && expr(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // (ANY_TYPE|INT_TYPE|DOUBLE_TYPE|STRING_TYPE|BOOLEAN_TYPE|COLLECTION_TYPE|SONG_TYPE|WEIGHTS_KEYWORD|ALBUM_TYPE|JAVA_TYPE|ID)
+  //       (LEFT_SBRACKET RIGHT_SBRACKET)? ID ASSIGN expr
+  //   | ID LEFT_SBRACKET int_expr RIGHT_SBRACKET ASSIGN expr
+  //   | ID ASSIGN expr
+  //   | lhs_member ASSIGN expr
+  //   | lhs_core DOUBLE_DOT ID ASSIGN expr
+  public static boolean asmt_base(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "asmt_base")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, ASMT_BASE, "<asmt base>");
+    r = asmt_base_0(b, l + 1);
+    if (!r) r = asmt_base_1(b, l + 1);
+    if (!r) r = asmt_base_2(b, l + 1);
+    if (!r) r = asmt_base_3(b, l + 1);
+    if (!r) r = asmt_base_4(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;
   }
 
   // (ANY_TYPE|INT_TYPE|DOUBLE_TYPE|STRING_TYPE|BOOLEAN_TYPE|COLLECTION_TYPE|SONG_TYPE|WEIGHTS_KEYWORD|ALBUM_TYPE|JAVA_TYPE|ID)
-  //           (LEFT_SBRACKET RIGHT_SBRACKET)? ID ASSIGN expr
-  private static boolean asmt_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "asmt_0")) return false;
+  //       (LEFT_SBRACKET RIGHT_SBRACKET)? ID ASSIGN expr
+  private static boolean asmt_base_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "asmt_base_0")) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = asmt_0_0(b, l + 1);
-    r = r && asmt_0_1(b, l + 1);
+    r = asmt_base_0_0(b, l + 1);
+    r = r && asmt_base_0_1(b, l + 1);
     r = r && consumeTokens(b, 0, ID, ASSIGN);
     r = r && expr(b, l + 1);
     exit_section_(b, m, null, r);
@@ -140,8 +172,8 @@ public class QilletniParser implements PsiParser, LightPsiParser {
   }
 
   // ANY_TYPE|INT_TYPE|DOUBLE_TYPE|STRING_TYPE|BOOLEAN_TYPE|COLLECTION_TYPE|SONG_TYPE|WEIGHTS_KEYWORD|ALBUM_TYPE|JAVA_TYPE|ID
-  private static boolean asmt_0_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "asmt_0_0")) return false;
+  private static boolean asmt_base_0_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "asmt_base_0_0")) return false;
     boolean r;
     r = consumeToken(b, ANY_TYPE);
     if (!r) r = consumeToken(b, INT_TYPE);
@@ -158,15 +190,15 @@ public class QilletniParser implements PsiParser, LightPsiParser {
   }
 
   // (LEFT_SBRACKET RIGHT_SBRACKET)?
-  private static boolean asmt_0_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "asmt_0_1")) return false;
-    asmt_0_1_0(b, l + 1);
+  private static boolean asmt_base_0_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "asmt_base_0_1")) return false;
+    asmt_base_0_1_0(b, l + 1);
     return true;
   }
 
   // LEFT_SBRACKET RIGHT_SBRACKET
-  private static boolean asmt_0_1_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "asmt_0_1_0")) return false;
+  private static boolean asmt_base_0_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "asmt_base_0_1_0")) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = consumeTokens(b, 0, LEFT_SBRACKET, RIGHT_SBRACKET);
@@ -175,8 +207,8 @@ public class QilletniParser implements PsiParser, LightPsiParser {
   }
 
   // ID LEFT_SBRACKET int_expr RIGHT_SBRACKET ASSIGN expr
-  private static boolean asmt_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "asmt_1")) return false;
+  private static boolean asmt_base_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "asmt_base_1")) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = consumeTokens(b, 0, ID, LEFT_SBRACKET);
@@ -188,8 +220,8 @@ public class QilletniParser implements PsiParser, LightPsiParser {
   }
 
   // ID ASSIGN expr
-  private static boolean asmt_2(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "asmt_2")) return false;
+  private static boolean asmt_base_2(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "asmt_base_2")) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = consumeTokens(b, 0, ID, ASSIGN);
@@ -198,36 +230,24 @@ public class QilletniParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // expr DOT ID ASSIGN expr
-  private static boolean asmt_3(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "asmt_3")) return false;
+  // lhs_member ASSIGN expr
+  private static boolean asmt_base_3(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "asmt_base_3")) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = expr(b, l + 1);
-    r = r && consumeTokens(b, 0, DOT, ID, ASSIGN);
+    r = lhs_member(b, l + 1);
+    r = r && consumeToken(b, ASSIGN);
     r = r && expr(b, l + 1);
     exit_section_(b, m, null, r);
     return r;
   }
 
-  // expr DOUBLE_DOT ID ASSIGN expr
-  private static boolean asmt_4(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "asmt_4")) return false;
+  // lhs_core DOUBLE_DOT ID ASSIGN expr
+  private static boolean asmt_base_4(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "asmt_base_4")) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = expr(b, l + 1);
-    r = r && consumeTokens(b, 0, DOUBLE_DOT, ID, ASSIGN);
-    r = r && expr(b, l + 1);
-    exit_section_(b, m, null, r);
-    return r;
-  }
-
-  // asmt DOUBLE_DOT ID ASSIGN expr
-  private static boolean asmt_5(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "asmt_5")) return false;
-    boolean r;
-    Marker m = enter_section_(b);
-    r = asmt(b, l + 1);
+    r = lhs_core(b, l + 1);
     r = r && consumeTokens(b, 0, DOUBLE_DOT, ID, ASSIGN);
     r = r && expr(b, l + 1);
     exit_section_(b, m, null, r);
@@ -265,7 +285,7 @@ public class QilletniParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // if_stmt | for_stmt | stmt | expr
+  // if_stmt | for_stmt | stmt | expr | LINE_COMMENT | BLOCK_COMMENT | DOC_COMMENT
   public static boolean body_stmt(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "body_stmt")) return false;
     boolean r;
@@ -274,6 +294,9 @@ public class QilletniParser implements PsiParser, LightPsiParser {
     if (!r) r = for_stmt(b, l + 1);
     if (!r) r = stmt(b, l + 1);
     if (!r) r = expr(b, l + 1);
+    if (!r) r = consumeToken(b, LINE_COMMENT);
+    if (!r) r = consumeToken(b, BLOCK_COMMENT);
+    if (!r) r = consumeToken(b, DOC_COMMENT);
     exit_section_(b, l, m, r, false, null);
     return r;
   }
@@ -1101,6 +1124,77 @@ public class QilletniParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // primary_expr (DOT function_call)*
+  public static boolean lhs_core(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "lhs_core")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, LHS_CORE, "<lhs core>");
+    r = primary_expr(b, l + 1);
+    r = r && lhs_core_1(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // (DOT function_call)*
+  private static boolean lhs_core_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "lhs_core_1")) return false;
+    while (true) {
+      int c = current_position_(b);
+      if (!lhs_core_1_0(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "lhs_core_1", c)) break;
+    }
+    return true;
+  }
+
+  // DOT function_call
+  private static boolean lhs_core_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "lhs_core_1_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, DOT);
+    r = r && function_call(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // lhs_core (DOT ID)+
+  public static boolean lhs_member(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "lhs_member")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, LHS_MEMBER, "<lhs member>");
+    r = lhs_core(b, l + 1);
+    r = r && lhs_member_1(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // (DOT ID)+
+  private static boolean lhs_member_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "lhs_member_1")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = lhs_member_1_0(b, l + 1);
+    while (r) {
+      int c = current_position_(b);
+      if (!lhs_member_1_0(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "lhs_member_1", c)) break;
+    }
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // DOT ID
+  private static boolean lhs_member_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "lhs_member_1_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeTokens(b, 0, DOT, ID);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  /* ********************************************************** */
   // INT LIMIT_UNIT?
   public static boolean limit_amount(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "limit_amount")) return false;
@@ -1429,37 +1523,29 @@ public class QilletniParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // import_file* running*
+  // (LINE_COMMENT | BLOCK_COMMENT | DOC_COMMENT | import_file | running)*
   public static boolean prog(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "prog")) return false;
-    boolean r;
     Marker m = enter_section_(b, l, _NONE_, PROG, "<prog>");
-    r = prog_0(b, l + 1);
-    r = r && prog_1(b, l + 1);
-    exit_section_(b, l, m, r, false, null);
-    return r;
+    while (true) {
+      int c = current_position_(b);
+      if (!prog_0(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "prog", c)) break;
+    }
+    exit_section_(b, l, m, true, false, null);
+    return true;
   }
 
-  // import_file*
+  // LINE_COMMENT | BLOCK_COMMENT | DOC_COMMENT | import_file | running
   private static boolean prog_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "prog_0")) return false;
-    while (true) {
-      int c = current_position_(b);
-      if (!import_file(b, l + 1)) break;
-      if (!empty_element_parsed_guard_(b, "prog_0", c)) break;
-    }
-    return true;
-  }
-
-  // running*
-  private static boolean prog_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "prog_1")) return false;
-    while (true) {
-      int c = current_position_(b);
-      if (!running(b, l + 1)) break;
-      if (!empty_element_parsed_guard_(b, "prog_1", c)) break;
-    }
-    return true;
+    boolean r;
+    r = consumeToken(b, LINE_COMMENT);
+    if (!r) r = consumeToken(b, BLOCK_COMMENT);
+    if (!r) r = consumeToken(b, DOC_COMMENT);
+    if (!r) r = import_file(b, l + 1);
+    if (!r) r = running(b, l + 1);
+    return r;
   }
 
   /* ********************************************************** */
@@ -1561,16 +1647,13 @@ public class QilletniParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // body_stmt | function_def | BLOCK_COMMENT | LINE_COMMENT | NEWLINE
+  // body_stmt | function_def
   public static boolean running(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "running")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, RUNNING, "<running>");
     r = body_stmt(b, l + 1);
     if (!r) r = function_def(b, l + 1);
-    if (!r) r = consumeToken(b, BLOCK_COMMENT);
-    if (!r) r = consumeToken(b, LINE_COMMENT);
-    if (!r) r = consumeToken(b, NEWLINE);
     exit_section_(b, l, m, r, false, null);
     return r;
   }
