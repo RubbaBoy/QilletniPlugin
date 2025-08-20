@@ -35,5 +35,9 @@
         <colorSettingsPage implementation="dev.qilletni.intellij.QilletniColorSettingsPage"/>
 
         <lang.documentationProvider language="Qilletni" implementationClass="dev.qilletni.intellij.QilletniDocumentationProvider"/>
+
+        <psi.referenceContributor implementation="dev.qilletni.intellij.references.QilletniReferenceContributor"/>
+        <lang.findUsagesProvider language="Qilletni" implementationClass="dev.qilletni.intellij.findusages.QilletniFindUsagesProvider"/>
+        <renamePsiElementProcessor implementation="dev.qilletni.intellij.refactoring.QilletniRenameEntityAndConstructorProcessor"/>
     </extensions>
 </idea-plugin>

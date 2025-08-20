@@ -39,6 +39,12 @@ public class QilletniFunctionDefImpl extends QilletniPsiElementBase implements Q
   }
 
   @Override
+  @NotNull
+  public QilletniFunctionName getFunctionName() {
+    return findNotNullChildByClass(QilletniFunctionName.class);
+  }
+
+  @Override
   @Nullable
   public QilletniFunctionOnType getFunctionOnType() {
     return findChildByClass(QilletniFunctionOnType.class);
@@ -54,12 +60,6 @@ public class QilletniFunctionDefImpl extends QilletniPsiElementBase implements Q
   @NotNull
   public PsiElement getFunctionDef() {
     return findNotNullChildByType(FUNCTION_DEF);
-  }
-
-  @Override
-  @NotNull
-  public PsiElement getId() {
-    return findNotNullChildByType(ID);
   }
 
   @Override

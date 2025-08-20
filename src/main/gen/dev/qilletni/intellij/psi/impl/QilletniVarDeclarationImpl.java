@@ -10,14 +10,14 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static dev.qilletni.intellij.psi.QilletniTypes.*;
 import dev.qilletni.intellij.psi.*;
 
-public class QilletniEntityPropertyDeclarationImpl extends QilletniPsiElementBase implements QilletniEntityPropertyDeclaration {
+public class QilletniVarDeclarationImpl extends QilletniPsiElementBase implements QilletniVarDeclaration {
 
-  public QilletniEntityPropertyDeclarationImpl(@NotNull ASTNode node) {
+  public QilletniVarDeclarationImpl(@NotNull ASTNode node) {
     super(node);
   }
 
   public void accept(@NotNull QilletniVisitor visitor) {
-    visitor.visitEntityPropertyDeclaration(this);
+    visitor.visitVarDeclaration(this);
   }
 
   @Override
@@ -27,15 +27,15 @@ public class QilletniEntityPropertyDeclarationImpl extends QilletniPsiElementBas
   }
 
   @Override
-  @Nullable
+  @NotNull
   public QilletniExpr getExpr() {
-    return findChildByClass(QilletniExpr.class);
+    return findNotNullChildByClass(QilletniExpr.class);
   }
 
   @Override
   @NotNull
-  public QilletniPropertyName getPropertyName() {
-    return findNotNullChildByClass(QilletniPropertyName.class);
+  public QilletniVarName getVarName() {
+    return findNotNullChildByClass(QilletniVarName.class);
   }
 
   @Override
@@ -51,9 +51,9 @@ public class QilletniEntityPropertyDeclarationImpl extends QilletniPsiElementBas
   }
 
   @Override
-  @Nullable
+  @NotNull
   public PsiElement getAssign() {
-    return findChildByType(ASSIGN);
+    return findNotNullChildByType(ASSIGN);
   }
 
   @Override
@@ -66,12 +66,6 @@ public class QilletniEntityPropertyDeclarationImpl extends QilletniPsiElementBas
   @Nullable
   public PsiElement getCollectionType() {
     return findChildByType(COLLECTION_TYPE);
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getDocComment() {
-    return findChildByType(DOC_COMMENT);
   }
 
   @Override

@@ -18,6 +18,7 @@ public interface QilletniTypes {
   IElementType COLLECTION_EXPR = new QilletniElementType("COLLECTION_EXPR");
   IElementType COLLECTION_LIMIT = new QilletniElementType("COLLECTION_LIMIT");
   IElementType COLLECTION_URL_OR_NAME_PAIR = new QilletniElementType("COLLECTION_URL_OR_NAME_PAIR");
+  IElementType CONSTRUCTOR_NAME = new QilletniElementType("CONSTRUCTOR_NAME");
   IElementType DOUBLE_EXPR = new QilletniElementType("DOUBLE_EXPR");
   IElementType ELSEIF_LIST = new QilletniElementType("ELSEIF_LIST");
   IElementType ELSE_BODY = new QilletniElementType("ELSE_BODY");
@@ -25,6 +26,7 @@ public interface QilletniTypes {
   IElementType ENTITY_CONSTRUCTOR = new QilletniElementType("ENTITY_CONSTRUCTOR");
   IElementType ENTITY_DEF = new QilletniElementType("ENTITY_DEF");
   IElementType ENTITY_INITIALIZE = new QilletniElementType("ENTITY_INITIALIZE");
+  IElementType ENTITY_NAME = new QilletniElementType("ENTITY_NAME");
   IElementType ENTITY_PROPERTY_DECLARATION = new QilletniElementType("ENTITY_PROPERTY_DECLARATION");
   IElementType EXPR = new QilletniElementType("EXPR");
   IElementType EXPR_LIST = new QilletniElementType("EXPR_LIST");
@@ -34,6 +36,7 @@ public interface QilletniTypes {
   IElementType FUNCTION_CALL = new QilletniElementType("FUNCTION_CALL");
   IElementType FUNCTION_DEFINITION = new QilletniElementType("FUNCTION_DEFINITION");
   IElementType FUNCTION_DEF_PARAMS = new QilletniElementType("FUNCTION_DEF_PARAMS");
+  IElementType FUNCTION_NAME = new QilletniElementType("FUNCTION_NAME");
   IElementType FUNCTION_ON_TYPE = new QilletniElementType("FUNCTION_ON_TYPE");
   IElementType IF_STMT = new QilletniElementType("IF_STMT");
   IElementType IMMUTABLE_POSTFIX_EXPR_SUFFIX = new QilletniElementType("IMMUTABLE_POSTFIX_EXPR_SUFFIX");
@@ -49,11 +52,13 @@ public interface QilletniTypes {
   IElementType LOGICAL_OR_EXPR = new QilletniElementType("LOGICAL_OR_EXPR");
   IElementType MULTIPLICATIVE_EXPR = new QilletniElementType("MULTIPLICATIVE_EXPR");
   IElementType ORDER_DEFINE = new QilletniElementType("ORDER_DEFINE");
+  IElementType PARAM_NAME = new QilletniElementType("PARAM_NAME");
   IElementType PLAY_STMT = new QilletniElementType("PLAY_STMT");
   IElementType POSTFIX_EXPR = new QilletniElementType("POSTFIX_EXPR");
   IElementType POSTFIX_SUFFIX = new QilletniElementType("POSTFIX_SUFFIX");
   IElementType PRIMARY_EXPR = new QilletniElementType("PRIMARY_EXPR");
   IElementType PROG = new QilletniElementType("PROG");
+  IElementType PROPERTY_NAME = new QilletniElementType("PROPERTY_NAME");
   IElementType PROVIDER_STMT = new QilletniElementType("PROVIDER_STMT");
   IElementType RANGE_EXPR = new QilletniElementType("RANGE_EXPR");
   IElementType RELATIONAL_EXPR = new QilletniElementType("RELATIONAL_EXPR");
@@ -65,6 +70,8 @@ public interface QilletniTypes {
   IElementType STMT = new QilletniElementType("STMT");
   IElementType STR_EXPR = new QilletniElementType("STR_EXPR");
   IElementType UNARY_EXPR = new QilletniElementType("UNARY_EXPR");
+  IElementType VAR_DECLARATION = new QilletniElementType("VAR_DECLARATION");
+  IElementType VAR_NAME = new QilletniElementType("VAR_NAME");
   IElementType WEIGHTS_DEFINE = new QilletniElementType("WEIGHTS_DEFINE");
   IElementType WEIGHTS_EXPR = new QilletniElementType("WEIGHTS_EXPR");
   IElementType WEIGHT_AMOUNT = new QilletniElementType("WEIGHT_AMOUNT");
@@ -172,6 +179,9 @@ public interface QilletniTypes {
       else if (type == COLLECTION_URL_OR_NAME_PAIR) {
         return new QilletniCollectionUrlOrNamePairImpl(node);
       }
+      else if (type == CONSTRUCTOR_NAME) {
+        return new QilletniConstructorNameImpl(node);
+      }
       else if (type == DOUBLE_EXPR) {
         return new QilletniDoubleExprImpl(node);
       }
@@ -192,6 +202,9 @@ public interface QilletniTypes {
       }
       else if (type == ENTITY_INITIALIZE) {
         return new QilletniEntityInitializeImpl(node);
+      }
+      else if (type == ENTITY_NAME) {
+        return new QilletniEntityNameImpl(node);
       }
       else if (type == ENTITY_PROPERTY_DECLARATION) {
         return new QilletniEntityPropertyDeclarationImpl(node);
@@ -219,6 +232,9 @@ public interface QilletniTypes {
       }
       else if (type == FUNCTION_DEF_PARAMS) {
         return new QilletniFunctionDefParamsImpl(node);
+      }
+      else if (type == FUNCTION_NAME) {
+        return new QilletniFunctionNameImpl(node);
       }
       else if (type == FUNCTION_ON_TYPE) {
         return new QilletniFunctionOnTypeImpl(node);
@@ -265,6 +281,9 @@ public interface QilletniTypes {
       else if (type == ORDER_DEFINE) {
         return new QilletniOrderDefineImpl(node);
       }
+      else if (type == PARAM_NAME) {
+        return new QilletniParamNameImpl(node);
+      }
       else if (type == PLAY_STMT) {
         return new QilletniPlayStmtImpl(node);
       }
@@ -279,6 +298,9 @@ public interface QilletniTypes {
       }
       else if (type == PROG) {
         return new QilletniProgImpl(node);
+      }
+      else if (type == PROPERTY_NAME) {
+        return new QilletniPropertyNameImpl(node);
       }
       else if (type == PROVIDER_STMT) {
         return new QilletniProviderStmtImpl(node);
@@ -312,6 +334,12 @@ public interface QilletniTypes {
       }
       else if (type == UNARY_EXPR) {
         return new QilletniUnaryExprImpl(node);
+      }
+      else if (type == VAR_DECLARATION) {
+        return new QilletniVarDeclarationImpl(node);
+      }
+      else if (type == VAR_NAME) {
+        return new QilletniVarNameImpl(node);
       }
       else if (type == WEIGHTS_DEFINE) {
         return new QilletniWeightsDefineImpl(node);

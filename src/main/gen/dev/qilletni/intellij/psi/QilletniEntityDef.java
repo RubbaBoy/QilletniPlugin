@@ -10,14 +10,14 @@ public interface QilletniEntityDef extends PsiElement {
   @NotNull
   QilletniEntityBody getEntityBody();
 
+  @NotNull
+  QilletniEntityName getEntityName();
+
   @Nullable
   PsiElement getDocComment();
 
   @NotNull
   PsiElement getEntity();
-
-  @NotNull
-  PsiElement getId();
 
   @NotNull
   PsiElement getLeftCbracket();

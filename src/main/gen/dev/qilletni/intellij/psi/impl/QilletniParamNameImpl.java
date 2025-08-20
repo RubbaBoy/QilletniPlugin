@@ -10,14 +10,14 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static dev.qilletni.intellij.psi.QilletniTypes.*;
 import dev.qilletni.intellij.psi.*;
 
-public class QilletniFunctionDefParamsImpl extends QilletniPsiElementBase implements QilletniFunctionDefParams {
+public class QilletniParamNameImpl extends QilletniNamedElementImpl implements QilletniParamName {
 
-  public QilletniFunctionDefParamsImpl(@NotNull ASTNode node) {
+  public QilletniParamNameImpl(@NotNull ASTNode node) {
     super(node);
   }
 
   public void accept(@NotNull QilletniVisitor visitor) {
-    visitor.visitFunctionDefParams(this);
+    visitor.visitParamName(this);
   }
 
   @Override
@@ -28,8 +28,8 @@ public class QilletniFunctionDefParamsImpl extends QilletniPsiElementBase implem
 
   @Override
   @NotNull
-  public List<QilletniParamName> getParamNameList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, QilletniParamName.class);
+  public PsiElement getId() {
+    return findNotNullChildByType(ID);
   }
 
 }

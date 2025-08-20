@@ -4,10 +4,11 @@ package dev.qilletni.intellij.psi;
 import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiNameIdentifierOwner;
 
-public interface QilletniFunctionDefParams extends PsiElement {
+public interface QilletniConstructorName extends PsiNameIdentifierOwner {
 
   @NotNull
-  List<QilletniParamName> getParamNameList();
+  PsiElement getId();
 
 }

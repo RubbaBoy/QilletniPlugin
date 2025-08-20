@@ -4,6 +4,7 @@ package dev.qilletni.intellij.psi;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiNameIdentifierOwner;
 
 public class QilletniVisitor extends PsiElementVisitor {
 
@@ -47,6 +48,10 @@ public class QilletniVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
+  public void visitConstructorName(@NotNull QilletniConstructorName o) {
+    visitPsiNameIdentifierOwner(o);
+  }
+
   public void visitDoubleExpr(@NotNull QilletniDoubleExpr o) {
     visitPsiElement(o);
   }
@@ -73,6 +78,10 @@ public class QilletniVisitor extends PsiElementVisitor {
 
   public void visitEntityInitialize(@NotNull QilletniEntityInitialize o) {
     visitPsiElement(o);
+  }
+
+  public void visitEntityName(@NotNull QilletniEntityName o) {
+    visitPsiNameIdentifierOwner(o);
   }
 
   public void visitEntityPropertyDeclaration(@NotNull QilletniEntityPropertyDeclaration o) {
@@ -109,6 +118,10 @@ public class QilletniVisitor extends PsiElementVisitor {
 
   public void visitFunctionDefParams(@NotNull QilletniFunctionDefParams o) {
     visitPsiElement(o);
+  }
+
+  public void visitFunctionName(@NotNull QilletniFunctionName o) {
+    visitPsiNameIdentifierOwner(o);
   }
 
   public void visitFunctionOnType(@NotNull QilletniFunctionOnType o) {
@@ -171,6 +184,10 @@ public class QilletniVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
+  public void visitParamName(@NotNull QilletniParamName o) {
+    visitPsiNameIdentifierOwner(o);
+  }
+
   public void visitPlayStmt(@NotNull QilletniPlayStmt o) {
     visitPsiElement(o);
   }
@@ -189,6 +206,10 @@ public class QilletniVisitor extends PsiElementVisitor {
 
   public void visitProg(@NotNull QilletniProg o) {
     visitPsiElement(o);
+  }
+
+  public void visitPropertyName(@NotNull QilletniPropertyName o) {
+    visitPsiNameIdentifierOwner(o);
   }
 
   public void visitProviderStmt(@NotNull QilletniProviderStmt o) {
@@ -235,6 +256,14 @@ public class QilletniVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
+  public void visitVarDeclaration(@NotNull QilletniVarDeclaration o) {
+    visitPsiElement(o);
+  }
+
+  public void visitVarName(@NotNull QilletniVarName o) {
+    visitPsiNameIdentifierOwner(o);
+  }
+
   public void visitWeightAmount(@NotNull QilletniWeightAmount o) {
     visitPsiElement(o);
   }
@@ -245,6 +274,10 @@ public class QilletniVisitor extends PsiElementVisitor {
 
   public void visitWeightsExpr(@NotNull QilletniWeightsExpr o) {
     visitPsiElement(o);
+  }
+
+  public void visitPsiNameIdentifierOwner(@NotNull PsiNameIdentifierOwner o) {
+    visitElement(o);
   }
 
   public void visitPsiElement(@NotNull PsiElement o) {

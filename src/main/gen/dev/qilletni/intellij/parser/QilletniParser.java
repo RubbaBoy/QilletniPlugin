@@ -138,8 +138,7 @@ public class QilletniParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // (ANY_TYPE|INT_TYPE|DOUBLE_TYPE|STRING_TYPE|BOOLEAN_TYPE|COLLECTION_TYPE|SONG_TYPE|WEIGHTS_KEYWORD|ALBUM_TYPE|JAVA_TYPE|ID)
-  //       (LEFT_SBRACKET RIGHT_SBRACKET)? ID ASSIGN expr
+  // var_declaration
   //   | ID LEFT_SBRACKET int_expr RIGHT_SBRACKET ASSIGN expr
   //   | ID ASSIGN expr
   //   | lhs_member ASSIGN expr
@@ -148,61 +147,12 @@ public class QilletniParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "asmt_base")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ASMT_BASE, "<asmt base>");
-    r = asmt_base_0(b, l + 1);
+    r = var_declaration(b, l + 1);
     if (!r) r = asmt_base_1(b, l + 1);
     if (!r) r = asmt_base_2(b, l + 1);
     if (!r) r = asmt_base_3(b, l + 1);
     if (!r) r = asmt_base_4(b, l + 1);
     exit_section_(b, l, m, r, false, null);
-    return r;
-  }
-
-  // (ANY_TYPE|INT_TYPE|DOUBLE_TYPE|STRING_TYPE|BOOLEAN_TYPE|COLLECTION_TYPE|SONG_TYPE|WEIGHTS_KEYWORD|ALBUM_TYPE|JAVA_TYPE|ID)
-  //       (LEFT_SBRACKET RIGHT_SBRACKET)? ID ASSIGN expr
-  private static boolean asmt_base_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "asmt_base_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b);
-    r = asmt_base_0_0(b, l + 1);
-    r = r && asmt_base_0_1(b, l + 1);
-    r = r && consumeTokens(b, 0, ID, ASSIGN);
-    r = r && expr(b, l + 1);
-    exit_section_(b, m, null, r);
-    return r;
-  }
-
-  // ANY_TYPE|INT_TYPE|DOUBLE_TYPE|STRING_TYPE|BOOLEAN_TYPE|COLLECTION_TYPE|SONG_TYPE|WEIGHTS_KEYWORD|ALBUM_TYPE|JAVA_TYPE|ID
-  private static boolean asmt_base_0_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "asmt_base_0_0")) return false;
-    boolean r;
-    r = consumeToken(b, ANY_TYPE);
-    if (!r) r = consumeToken(b, INT_TYPE);
-    if (!r) r = consumeToken(b, DOUBLE_TYPE);
-    if (!r) r = consumeToken(b, STRING_TYPE);
-    if (!r) r = consumeToken(b, BOOLEAN_TYPE);
-    if (!r) r = consumeToken(b, COLLECTION_TYPE);
-    if (!r) r = consumeToken(b, SONG_TYPE);
-    if (!r) r = consumeToken(b, WEIGHTS_KEYWORD);
-    if (!r) r = consumeToken(b, ALBUM_TYPE);
-    if (!r) r = consumeToken(b, JAVA_TYPE);
-    if (!r) r = consumeToken(b, ID);
-    return r;
-  }
-
-  // (LEFT_SBRACKET RIGHT_SBRACKET)?
-  private static boolean asmt_base_0_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "asmt_base_0_1")) return false;
-    asmt_base_0_1_0(b, l + 1);
-    return true;
-  }
-
-  // LEFT_SBRACKET RIGHT_SBRACKET
-  private static boolean asmt_base_0_1_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "asmt_base_0_1_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b);
-    r = consumeTokens(b, 0, LEFT_SBRACKET, RIGHT_SBRACKET);
-    exit_section_(b, m, null, r);
     return r;
   }
 
@@ -398,6 +348,18 @@ public class QilletniParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // ID
+  public static boolean constructor_name(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "constructor_name")) return false;
+    if (!nextTokenIs(b, ID)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, ID);
+    exit_section_(b, m, CONSTRUCTOR_NAME, r);
+    return r;
+  }
+
+  /* ********************************************************** */
   // DOUBLE | DOUBLE_TYPE LEFT_PAREN expr RIGHT_PAREN
   public static boolean double_expr(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "double_expr")) return false;
@@ -517,14 +479,15 @@ public class QilletniParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // DOC_COMMENT? ID LEFT_PAREN function_def_params RIGHT_PAREN
+  // DOC_COMMENT? constructor_name LEFT_PAREN function_def_params RIGHT_PAREN
   public static boolean entity_constructor(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "entity_constructor")) return false;
     if (!nextTokenIs(b, "<entity constructor>", DOC_COMMENT, ID)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ENTITY_CONSTRUCTOR, "<entity constructor>");
     r = entity_constructor_0(b, l + 1);
-    r = r && consumeTokens(b, 0, ID, LEFT_PAREN);
+    r = r && constructor_name(b, l + 1);
+    r = r && consumeToken(b, LEFT_PAREN);
     r = r && function_def_params(b, l + 1);
     r = r && consumeToken(b, RIGHT_PAREN);
     exit_section_(b, l, m, r, false, null);
@@ -539,14 +502,16 @@ public class QilletniParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // DOC_COMMENT? ENTITY ID LEFT_CBRACKET entity_body RIGHT_CBRACKET
+  // DOC_COMMENT? ENTITY entity_name LEFT_CBRACKET entity_body RIGHT_CBRACKET
   public static boolean entity_def(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "entity_def")) return false;
     if (!nextTokenIs(b, "<entity def>", DOC_COMMENT, ENTITY)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ENTITY_DEF, "<entity def>");
     r = entity_def_0(b, l + 1);
-    r = r && consumeTokens(b, 0, ENTITY, ID, LEFT_CBRACKET);
+    r = r && consumeToken(b, ENTITY);
+    r = r && entity_name(b, l + 1);
+    r = r && consumeToken(b, LEFT_CBRACKET);
     r = r && entity_body(b, l + 1);
     r = r && consumeToken(b, RIGHT_CBRACKET);
     exit_section_(b, l, m, r, false, null);
@@ -582,9 +547,21 @@ public class QilletniParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // ID
+  public static boolean entity_name(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "entity_name")) return false;
+    if (!nextTokenIs(b, ID)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, ID);
+    exit_section_(b, m, ENTITY_NAME, r);
+    return r;
+  }
+
+  /* ********************************************************** */
   // DOC_COMMENT?
   //                                 (ANY_TYPE|INT_TYPE|DOUBLE_TYPE|STRING_TYPE|BOOLEAN_TYPE|COLLECTION_TYPE|SONG_TYPE|WEIGHTS_KEYWORD|ALBUM_TYPE|JAVA_TYPE|ID)
-  //                                 (LEFT_SBRACKET RIGHT_SBRACKET)? ID (ASSIGN expr)?
+  //                                 (LEFT_SBRACKET RIGHT_SBRACKET)? property_name (ASSIGN expr)?
   public static boolean entity_property_declaration(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "entity_property_declaration")) return false;
     boolean r;
@@ -592,7 +569,7 @@ public class QilletniParser implements PsiParser, LightPsiParser {
     r = entity_property_declaration_0(b, l + 1);
     r = r && entity_property_declaration_1(b, l + 1);
     r = r && entity_property_declaration_2(b, l + 1);
-    r = r && consumeToken(b, ID);
+    r = r && property_name(b, l + 1);
     r = r && entity_property_declaration_4(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;
@@ -773,8 +750,8 @@ public class QilletniParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // DOC_COMMENT? STATIC? FUNCTION_DEF ID LEFT_PAREN function_def_params RIGHT_PAREN function_on_type? LEFT_CBRACKET body RIGHT_CBRACKET
-  //                | DOC_COMMENT? NATIVE STATIC? FUNCTION_DEF ID LEFT_PAREN function_def_params RIGHT_PAREN function_on_type?
+  // DOC_COMMENT? STATIC? FUNCTION_DEF function_name LEFT_PAREN function_def_params RIGHT_PAREN function_on_type? LEFT_CBRACKET body RIGHT_CBRACKET
+  //                | DOC_COMMENT? NATIVE STATIC? FUNCTION_DEF function_name LEFT_PAREN function_def_params RIGHT_PAREN function_on_type?
   public static boolean function_def(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "function_def")) return false;
     boolean r;
@@ -785,14 +762,16 @@ public class QilletniParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // DOC_COMMENT? STATIC? FUNCTION_DEF ID LEFT_PAREN function_def_params RIGHT_PAREN function_on_type? LEFT_CBRACKET body RIGHT_CBRACKET
+  // DOC_COMMENT? STATIC? FUNCTION_DEF function_name LEFT_PAREN function_def_params RIGHT_PAREN function_on_type? LEFT_CBRACKET body RIGHT_CBRACKET
   private static boolean function_def_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "function_def_0")) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = function_def_0_0(b, l + 1);
     r = r && function_def_0_1(b, l + 1);
-    r = r && consumeTokens(b, 0, FUNCTION_DEF, ID, LEFT_PAREN);
+    r = r && consumeToken(b, FUNCTION_DEF);
+    r = r && function_name(b, l + 1);
+    r = r && consumeToken(b, LEFT_PAREN);
     r = r && function_def_params(b, l + 1);
     r = r && consumeToken(b, RIGHT_PAREN);
     r = r && function_def_0_7(b, l + 1);
@@ -824,7 +803,7 @@ public class QilletniParser implements PsiParser, LightPsiParser {
     return true;
   }
 
-  // DOC_COMMENT? NATIVE STATIC? FUNCTION_DEF ID LEFT_PAREN function_def_params RIGHT_PAREN function_on_type?
+  // DOC_COMMENT? NATIVE STATIC? FUNCTION_DEF function_name LEFT_PAREN function_def_params RIGHT_PAREN function_on_type?
   private static boolean function_def_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "function_def_1")) return false;
     boolean r;
@@ -832,7 +811,9 @@ public class QilletniParser implements PsiParser, LightPsiParser {
     r = function_def_1_0(b, l + 1);
     r = r && consumeToken(b, NATIVE);
     r = r && function_def_1_2(b, l + 1);
-    r = r && consumeTokens(b, 0, FUNCTION_DEF, ID, LEFT_PAREN);
+    r = r && consumeToken(b, FUNCTION_DEF);
+    r = r && function_name(b, l + 1);
+    r = r && consumeToken(b, LEFT_PAREN);
     r = r && function_def_params(b, l + 1);
     r = r && consumeToken(b, RIGHT_PAREN);
     r = r && function_def_1_8(b, l + 1);
@@ -862,7 +843,7 @@ public class QilletniParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // (ID (COMMA ID)*)?
+  // (param_name (COMMA param_name)*)?
   public static boolean function_def_params(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "function_def_params")) return false;
     Marker m = enter_section_(b, l, _NONE_, FUNCTION_DEF_PARAMS, "<function def params>");
@@ -871,18 +852,18 @@ public class QilletniParser implements PsiParser, LightPsiParser {
     return true;
   }
 
-  // ID (COMMA ID)*
+  // param_name (COMMA param_name)*
   private static boolean function_def_params_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "function_def_params_0")) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = consumeToken(b, ID);
+    r = param_name(b, l + 1);
     r = r && function_def_params_0_1(b, l + 1);
     exit_section_(b, m, null, r);
     return r;
   }
 
-  // (COMMA ID)*
+  // (COMMA param_name)*
   private static boolean function_def_params_0_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "function_def_params_0_1")) return false;
     while (true) {
@@ -893,13 +874,26 @@ public class QilletniParser implements PsiParser, LightPsiParser {
     return true;
   }
 
-  // COMMA ID
+  // COMMA param_name
   private static boolean function_def_params_0_1_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "function_def_params_0_1_0")) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = consumeTokens(b, 0, COMMA, ID);
+    r = consumeToken(b, COMMA);
+    r = r && param_name(b, l + 1);
     exit_section_(b, m, null, r);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // ID
+  public static boolean function_name(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "function_name")) return false;
+    if (!nextTokenIs(b, ID)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, ID);
+    exit_section_(b, m, FUNCTION_NAME, r);
     return r;
   }
 
@@ -1387,6 +1381,18 @@ public class QilletniParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // ID
+  public static boolean param_name(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "param_name")) return false;
+    if (!nextTokenIs(b, ID)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, ID);
+    exit_section_(b, m, PARAM_NAME, r);
+    return r;
+  }
+
+  /* ********************************************************** */
   // PLAY (ID|expr) collection_limit? LOOP_PARAM?
   public static boolean play_stmt(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "play_stmt")) return false;
@@ -1545,6 +1551,18 @@ public class QilletniParser implements PsiParser, LightPsiParser {
     if (!r) r = consumeToken(b, DOC_COMMENT);
     if (!r) r = import_file(b, l + 1);
     if (!r) r = running(b, l + 1);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // ID
+  public static boolean property_name(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "property_name")) return false;
+    if (!nextTokenIs(b, ID)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, ID);
+    exit_section_(b, m, PROPERTY_NAME, r);
     return r;
   }
 
@@ -1822,6 +1840,69 @@ public class QilletniParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "unary_expr_1_3")) return false;
     immutable_postfix_expr_suffix(b, l + 1);
     return true;
+  }
+
+  /* ********************************************************** */
+  // (ANY_TYPE|INT_TYPE|DOUBLE_TYPE|STRING_TYPE|BOOLEAN_TYPE|COLLECTION_TYPE|SONG_TYPE|WEIGHTS_KEYWORD|ALBUM_TYPE|JAVA_TYPE|ID)
+  //                     (LEFT_SBRACKET RIGHT_SBRACKET)? var_name ASSIGN expr
+  public static boolean var_declaration(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "var_declaration")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, VAR_DECLARATION, "<var declaration>");
+    r = var_declaration_0(b, l + 1);
+    r = r && var_declaration_1(b, l + 1);
+    r = r && var_name(b, l + 1);
+    r = r && consumeToken(b, ASSIGN);
+    r = r && expr(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // ANY_TYPE|INT_TYPE|DOUBLE_TYPE|STRING_TYPE|BOOLEAN_TYPE|COLLECTION_TYPE|SONG_TYPE|WEIGHTS_KEYWORD|ALBUM_TYPE|JAVA_TYPE|ID
+  private static boolean var_declaration_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "var_declaration_0")) return false;
+    boolean r;
+    r = consumeToken(b, ANY_TYPE);
+    if (!r) r = consumeToken(b, INT_TYPE);
+    if (!r) r = consumeToken(b, DOUBLE_TYPE);
+    if (!r) r = consumeToken(b, STRING_TYPE);
+    if (!r) r = consumeToken(b, BOOLEAN_TYPE);
+    if (!r) r = consumeToken(b, COLLECTION_TYPE);
+    if (!r) r = consumeToken(b, SONG_TYPE);
+    if (!r) r = consumeToken(b, WEIGHTS_KEYWORD);
+    if (!r) r = consumeToken(b, ALBUM_TYPE);
+    if (!r) r = consumeToken(b, JAVA_TYPE);
+    if (!r) r = consumeToken(b, ID);
+    return r;
+  }
+
+  // (LEFT_SBRACKET RIGHT_SBRACKET)?
+  private static boolean var_declaration_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "var_declaration_1")) return false;
+    var_declaration_1_0(b, l + 1);
+    return true;
+  }
+
+  // LEFT_SBRACKET RIGHT_SBRACKET
+  private static boolean var_declaration_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "var_declaration_1_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeTokens(b, 0, LEFT_SBRACKET, RIGHT_SBRACKET);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // ID
+  public static boolean var_name(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "var_name")) return false;
+    if (!nextTokenIs(b, ID)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, ID);
+    exit_section_(b, m, VAR_NAME, r);
+    return r;
   }
 
   /* ********************************************************** */

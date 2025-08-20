@@ -27,9 +27,9 @@ public class QilletniAsmtBaseImpl extends QilletniPsiElementBase implements Qill
   }
 
   @Override
-  @NotNull
+  @Nullable
   public QilletniExpr getExpr() {
-    return findNotNullChildByClass(QilletniExpr.class);
+    return findChildByClass(QilletniExpr.class);
   }
 
   @Override
@@ -52,32 +52,14 @@ public class QilletniAsmtBaseImpl extends QilletniPsiElementBase implements Qill
 
   @Override
   @Nullable
-  public PsiElement getAlbumType() {
-    return findChildByType(ALBUM_TYPE);
+  public QilletniVarDeclaration getVarDeclaration() {
+    return findChildByClass(QilletniVarDeclaration.class);
   }
 
   @Override
   @Nullable
-  public PsiElement getAnyType() {
-    return findChildByType(ANY_TYPE);
-  }
-
-  @Override
-  @NotNull
   public PsiElement getAssign() {
-    return findNotNullChildByType(ASSIGN);
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getBooleanType() {
-    return findChildByType(BOOLEAN_TYPE);
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getCollectionType() {
-    return findChildByType(COLLECTION_TYPE);
+    return findChildByType(ASSIGN);
   }
 
   @Override
@@ -88,20 +70,8 @@ public class QilletniAsmtBaseImpl extends QilletniPsiElementBase implements Qill
 
   @Override
   @Nullable
-  public PsiElement getDoubleType() {
-    return findChildByType(DOUBLE_TYPE);
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getIntType() {
-    return findChildByType(INT_TYPE);
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getJavaType() {
-    return findChildByType(JAVA_TYPE);
+  public PsiElement getId() {
+    return findChildByType(ID);
   }
 
   @Override
@@ -114,24 +84,6 @@ public class QilletniAsmtBaseImpl extends QilletniPsiElementBase implements Qill
   @Nullable
   public PsiElement getRightSbracket() {
     return findChildByType(RIGHT_SBRACKET);
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getSongType() {
-    return findChildByType(SONG_TYPE);
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getStringType() {
-    return findChildByType(STRING_TYPE);
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getWeightsKeyword() {
-    return findChildByType(WEIGHTS_KEYWORD);
   }
 
 }

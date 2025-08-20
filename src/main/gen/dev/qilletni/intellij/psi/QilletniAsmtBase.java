@@ -7,7 +7,7 @@ import com.intellij.psi.PsiElement;
 
 public interface QilletniAsmtBase extends PsiElement {
 
-  @NotNull
+  @Nullable
   QilletniExpr getExpr();
 
   @Nullable
@@ -20,45 +20,21 @@ public interface QilletniAsmtBase extends PsiElement {
   QilletniLhsMember getLhsMember();
 
   @Nullable
-  PsiElement getAlbumType();
+  QilletniVarDeclaration getVarDeclaration();
 
   @Nullable
-  PsiElement getAnyType();
-
-  @NotNull
   PsiElement getAssign();
-
-  @Nullable
-  PsiElement getBooleanType();
-
-  @Nullable
-  PsiElement getCollectionType();
 
   @Nullable
   PsiElement getDoubleDot();
 
   @Nullable
-  PsiElement getDoubleType();
-
-  @Nullable
-  PsiElement getIntType();
-
-  @Nullable
-  PsiElement getJavaType();
+  PsiElement getId();
 
   @Nullable
   PsiElement getLeftSbracket();
 
   @Nullable
   PsiElement getRightSbracket();
-
-  @Nullable
-  PsiElement getSongType();
-
-  @Nullable
-  PsiElement getStringType();
-
-  @Nullable
-  PsiElement getWeightsKeyword();
 
 }

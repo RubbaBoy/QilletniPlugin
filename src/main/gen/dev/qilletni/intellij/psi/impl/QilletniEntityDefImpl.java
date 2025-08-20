@@ -33,6 +33,12 @@ public class QilletniEntityDefImpl extends QilletniPsiElementBase implements Qil
   }
 
   @Override
+  @NotNull
+  public QilletniEntityName getEntityName() {
+    return findNotNullChildByClass(QilletniEntityName.class);
+  }
+
+  @Override
   @Nullable
   public PsiElement getDocComment() {
     return findChildByType(DOC_COMMENT);
@@ -42,12 +48,6 @@ public class QilletniEntityDefImpl extends QilletniPsiElementBase implements Qil
   @NotNull
   public PsiElement getEntity() {
     return findNotNullChildByType(ENTITY);
-  }
-
-  @Override
-  @NotNull
-  public PsiElement getId() {
-    return findNotNullChildByType(ID);
   }
 
   @Override

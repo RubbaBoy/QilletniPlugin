@@ -28,6 +28,12 @@ public class QilletniEntityConstructorImpl extends QilletniPsiElementBase implem
 
   @Override
   @NotNull
+  public QilletniConstructorName getConstructorName() {
+    return findNotNullChildByClass(QilletniConstructorName.class);
+  }
+
+  @Override
+  @NotNull
   public QilletniFunctionDefParams getFunctionDefParams() {
     return findNotNullChildByClass(QilletniFunctionDefParams.class);
   }
@@ -36,12 +42,6 @@ public class QilletniEntityConstructorImpl extends QilletniPsiElementBase implem
   @Nullable
   public PsiElement getDocComment() {
     return findChildByType(DOC_COMMENT);
-  }
-
-  @Override
-  @NotNull
-  public PsiElement getId() {
-    return findNotNullChildByType(ID);
   }
 
   @Override

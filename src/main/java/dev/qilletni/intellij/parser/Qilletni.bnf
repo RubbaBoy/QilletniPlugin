@@ -142,9 +142,8 @@ lhs_core ::= primary_expr (DOT function_call)*
 lhs_member ::= lhs_core (DOT ID)+
 
 // Base assignments (no left recursion)
-asmt_base ::=
-    (ANY_TYPE|INT_TYPE|DOUBLE_TYPE|STRING_TYPE|BOOLEAN_TYPE|COLLECTION_TYPE|SONG_TYPE|WEIGHTS_KEYWORD|ALBUM_TYPE|JAVA_TYPE|ID)
-      (LEFT_SBRACKET RIGHT_SBRACKET)? ID ASSIGN expr
+asmt_base ::= 
+    var_declaration
   | ID LEFT_SBRACKET int_expr RIGHT_SBRACKET ASSIGN expr
   | ID ASSIGN expr
   | lhs_member ASSIGN expr
@@ -159,12 +158,17 @@ play_stmt ::= PLAY (ID|expr) collection_limit? LOOP_PARAM?
 
 provider_stmt ::= PROVIDER str_expr (LEFT_CBRACKET body RIGHT_CBRACKET)?
 
-function_def ::= (DOC_COMMENT? STATIC? FUNCTION_DEF ID LEFT_PAREN function_def_params RIGHT_PAREN function_on_type? LEFT_CBRACKET body RIGHT_CBRACKET
-               | DOC_COMMENT? NATIVE STATIC? FUNCTION_DEF ID LEFT_PAREN function_def_params RIGHT_PAREN function_on_type?) {elementType=FUNCTION_DEFINITION}
+function_def ::= (DOC_COMMENT? STATIC? FUNCTION_DEF function_name LEFT_PAREN function_def_params RIGHT_PAREN function_on_type? LEFT_CBRACKET body RIGHT_CBRACKET
+               | DOC_COMMENT? NATIVE STATIC? FUNCTION_DEF function_name LEFT_PAREN function_def_params RIGHT_PAREN function_on_type?) {elementType=FUNCTION_DEFINITION}
 
 function_on_type ::= ON (INT_TYPE|STRING_TYPE|BOOLEAN_TYPE|COLLECTION_TYPE|SONG_TYPE|ALBUM_TYPE|WEIGHTS_KEYWORD|ID)
 
-function_def_params ::= (ID (COMMA ID)*)?
+function_def_params ::= (param_name (COMMA param_name)*)?
+
+param_name ::= ID {
+  mixin="dev.qilletni.intellij.psi.impl.QilletniNamedElementImpl"
+  implements="com.intellij.psi.PsiNameIdentifierOwner"
+}
 
 if_stmt ::= IF_KEYWORD LEFT_PAREN expr RIGHT_PAREN LEFT_CBRACKET body RIGHT_CBRACKET elseif_list else_body
 
@@ -180,15 +184,15 @@ range_expr ::= ID DOUBLE_DOT (expr | RANGE_INFINITY)
 
 foreach_range ::= ID COLON expr
 
-entity_def ::= DOC_COMMENT? ENTITY ID LEFT_CBRACKET entity_body RIGHT_CBRACKET
+entity_def ::= DOC_COMMENT? ENTITY entity_name LEFT_CBRACKET entity_body RIGHT_CBRACKET
 
 entity_body ::= entity_property_declaration* entity_constructor? function_def*
 
 entity_property_declaration ::= DOC_COMMENT?
                                 (ANY_TYPE|INT_TYPE|DOUBLE_TYPE|STRING_TYPE|BOOLEAN_TYPE|COLLECTION_TYPE|SONG_TYPE|WEIGHTS_KEYWORD|ALBUM_TYPE|JAVA_TYPE|ID)
-                                (LEFT_SBRACKET RIGHT_SBRACKET)? ID (ASSIGN expr)?
+                                (LEFT_SBRACKET RIGHT_SBRACKET)? property_name (ASSIGN expr)?
 
-entity_constructor ::= DOC_COMMENT? ID LEFT_PAREN function_def_params RIGHT_PAREN
+entity_constructor ::= DOC_COMMENT? constructor_name LEFT_PAREN function_def_params RIGHT_PAREN
 
 entity_initialize ::= NEW ID LEFT_PAREN expr_list? RIGHT_PAREN
 
@@ -197,3 +201,32 @@ stmt ::= play_stmt | asmt | entity_def | provider_stmt
 weight_amount ::= INT WEIGHT_UNIT
 
 limit_amount ::= INT LIMIT_UNIT?
+
+// --- Named elements and variable declaration split ---
+function_name ::= ID {
+  mixin="dev.qilletni.intellij.psi.impl.QilletniNamedElementImpl"
+  implements="com.intellij.psi.PsiNameIdentifierOwner"
+}
+
+entity_name ::= ID {
+  mixin="dev.qilletni.intellij.psi.impl.QilletniNamedElementImpl"
+  implements="com.intellij.psi.PsiNameIdentifierOwner"
+}
+
+property_name ::= ID {
+  mixin="dev.qilletni.intellij.psi.impl.QilletniNamedElementImpl"
+  implements="com.intellij.psi.PsiNameIdentifierOwner"
+}
+
+constructor_name ::= ID {
+  mixin="dev.qilletni.intellij.psi.impl.QilletniNamedElementImpl"
+  implements="com.intellij.psi.PsiNameIdentifierOwner"
+}
+
+var_name ::= ID {
+  mixin="dev.qilletni.intellij.psi.impl.QilletniNamedElementImpl"
+  implements="com.intellij.psi.PsiNameIdentifierOwner"
+}
+
+var_declaration ::= (ANY_TYPE|INT_TYPE|DOUBLE_TYPE|STRING_TYPE|BOOLEAN_TYPE|COLLECTION_TYPE|SONG_TYPE|WEIGHTS_KEYWORD|ALBUM_TYPE|JAVA_TYPE|ID)
+                    (LEFT_SBRACKET RIGHT_SBRACKET)? var_name ASSIGN expr

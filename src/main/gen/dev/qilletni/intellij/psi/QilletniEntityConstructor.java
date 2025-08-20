@@ -8,13 +8,13 @@ import com.intellij.psi.PsiElement;
 public interface QilletniEntityConstructor extends PsiElement {
 
   @NotNull
+  QilletniConstructorName getConstructorName();
+
+  @NotNull
   QilletniFunctionDefParams getFunctionDefParams();
 
   @Nullable
   PsiElement getDocComment();
-
-  @NotNull
-  PsiElement getId();
 
   @NotNull
   PsiElement getLeftParen();

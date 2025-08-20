@@ -5,13 +5,13 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface QilletniEntityPropertyDeclaration extends PsiElement {
+public interface QilletniVarDeclaration extends PsiElement {
 
-  @Nullable
+  @NotNull
   QilletniExpr getExpr();
 
   @NotNull
-  QilletniPropertyName getPropertyName();
+  QilletniVarName getVarName();
 
   @Nullable
   PsiElement getAlbumType();
@@ -19,7 +19,7 @@ public interface QilletniEntityPropertyDeclaration extends PsiElement {
   @Nullable
   PsiElement getAnyType();
 
-  @Nullable
+  @NotNull
   PsiElement getAssign();
 
   @Nullable
@@ -27,9 +27,6 @@ public interface QilletniEntityPropertyDeclaration extends PsiElement {
 
   @Nullable
   PsiElement getCollectionType();
-
-  @Nullable
-  PsiElement getDocComment();
 
   @Nullable
   PsiElement getDoubleType();

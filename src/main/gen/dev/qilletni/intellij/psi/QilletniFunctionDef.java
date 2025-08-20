@@ -13,6 +13,9 @@ public interface QilletniFunctionDef extends PsiElement {
   @NotNull
   QilletniFunctionDefParams getFunctionDefParams();
 
+  @NotNull
+  QilletniFunctionName getFunctionName();
+
   @Nullable
   QilletniFunctionOnType getFunctionOnType();
 
@@ -21,9 +24,6 @@ public interface QilletniFunctionDef extends PsiElement {
 
   @NotNull
   PsiElement getFunctionDef();
-
-  @NotNull
-  PsiElement getId();
 
   @Nullable
   PsiElement getLeftCbracket();
