@@ -17,17 +17,84 @@ public final class QilletniResolveUtil {
     private QilletniResolveUtil() {}
 
     public static @Nullable PsiElement resolveVariableUsage(PsiElement idElement) {
-        if (!isIdLeaf(idElement)) return null;
-        PsiElement scope = ascendToFunction(idElement);
-        if (scope == null) return null;
-        // Params first
-        for (var pName : PsiTreeUtil.findChildrenOfType(scope, QilletniParamName.class)) {
-            if (textEquals(pName.getText(), idElement.getText())) return pName;
+        if (!isIdLeaf(idElement)) {
+            System.out.println("[resolveVariableUsage] not an ID leaf -> null");
+            return null;
         }
-        // Typed var declarations (order not enforced yet)
-        for (var vName : PsiTreeUtil.findChildrenOfType(scope, QilletniVarName.class)) {
-            if (textEquals(vName.getText(), idElement.getText())) return vName;
+        PsiElement function = ascendToFunction(idElement);
+        if (function == null) {
+            if (isInRoot(idElement)) {
+                System.out.println("[resolveVariableUsage] in root, no enclosing function");
+                PsiFile file = idElement.getContainingFile();
+                if (file instanceof QilletniFile) {
+                    var psiElement = resolveTopLevelUses(idElement, file);
+                    if (psiElement != null) {
+                        System.out.println("[resolveVariableUsage] no top level vars");
+                        return psiElement;
+                    }
+                }
+            } else {
+                System.out.println("[resolveVariableUsage] not in root, but no enclosing function -> null");
+            }
+
+            return null;
         }
+
+        // 1) Within current function: params first, then local var declarations
+        for (var pName : PsiTreeUtil.findChildrenOfType(function, QilletniParamName.class)) {
+            if (textEquals(pName.getText(), idElement.getText())) {
+                System.out.println("[resolveVariableUsage] resolved to function param: " + pName.getText());
+                return pName;
+            }
+        }
+        for (var vName : PsiTreeUtil.findChildrenOfType(function, QilletniVarName.class)) {
+            if (textEquals(vName.getText(), idElement.getText())) {
+                System.out.println("[resolveVariableUsage] resolved to local var: " + vName.getText());
+                return vName;
+            }
+        }
+
+        // 2) If function is directly in the file, also look for top-level variables in the file scope
+        PsiFile file = idElement.getContainingFile();
+        System.out.println("parent = " + function.getParent() + "  file = " + file);
+        if (file instanceof QilletniFile) {
+            if (function.getParent() instanceof QilletniRunning) {
+                var psiElement = resolveTopLevelUses(idElement, file);
+                if (psiElement != null) {
+                    return psiElement;
+                }
+            } else {
+                System.out.println("222");
+                // 3) If function is inside an entity, treat as potential member usage and check entity members
+                var entity = PsiTreeUtil.getParentOfType(function, QilletniEntityDef.class);
+                if (entity != null) {
+                    for (var propName : PsiTreeUtil.findChildrenOfType(entity, QilletniPropertyName.class)) {
+                        if (textEquals(propName.getText(), idElement.getText())) {
+                            System.out.println("[resolveVariableUsage] resolved to entity property: " + propName.getText());
+                            return propName;
+                        }
+                    }
+                }
+            }
+        }
+
+        System.out.println("[resolveVariableUsage] unresolved -> null");
+        return null;
+    }
+
+    public static PsiElement resolveTopLevelUses(PsiElement idElement, PsiFile file) {
+        for (var vName : PsiTreeUtil.findChildrenOfType(file, QilletniVarName.class)) {
+            System.out.println("vName = " + vName);
+            // Only consider top-level declarations (not inside any function/entity)
+            if (PsiTreeUtil.getParentOfType(vName, QilletniFunctionDef.class, false) == null
+                    && PsiTreeUtil.getParentOfType(vName, QilletniEntityDef.class, false) == null) {
+                if (textEquals(vName.getText(), idElement.getText())) {
+                    System.out.println("[resolveVariableUsage] resolved to top-level var: " + vName.getText());
+                    return vName;
+                }
+            }
+        }
+
         return null;
     }
 
@@ -111,5 +178,15 @@ public final class QilletniResolveUtil {
             cur = cur.getParent();
         }
         return null;
+    }
+
+    private static boolean isInRoot(PsiElement element) {
+        PsiElement cur = element;
+        while (cur != null) {
+            if (cur.getNode() != null && (cur.getNode().getElementType() == QilletniTypes.FUNCTION_DEFINITION || cur.getNode().getElementType() == QilletniTypes.ENTITY_DEF)) return false;
+            if (cur.getNode() != null && cur.getNode().getElementType() == QilletniTypes.RUNNING) return true;
+            cur = cur.getParent();
+        }
+        return true;
     }
 }

@@ -9,6 +9,7 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.PsiReferenceContributor;
 import com.intellij.psi.PsiReferenceRegistrar;
 import com.intellij.psi.PsiReferenceProvider;
+import com.intellij.psi.impl.source.DummyHolder;
 import com.intellij.util.ProcessingContext;
 import dev.qilletni.intellij.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -30,11 +31,12 @@ public final class QilletniReferenceContributor extends PsiReferenceContributor 
                         .andNot(PlatformPatterns.psiElement().withParent(QilletniVarName.class))
                         .andNot(PlatformPatterns.psiElement().withParent(QilletniParamName.class))
                         .andNot(PlatformPatterns.psiElement().withParent(QilletniFunctionCall.class))
-                        .andNot(PlatformPatterns.psiElement().withParent(QilletniPostfixSuffix.class)),
+                        .andNot(PlatformPatterns.psiElement().withParent(QilletniPostfixSuffix.class))
+                        .andNot(PlatformPatterns.psiElement().withParent(DummyHolder.class)),
                 new PsiReferenceProvider() {
                     @Override
                     public PsiReference @NotNull [] getReferencesByElement(@NotNull PsiElement element, @NotNull ProcessingContext context) {
-                        System.out.println("Here we are in QilletniReferenceContributor for " + element.getText());
+                        System.out.println("Here we are in QilletniReferenceContributor for " + element.getText() + "  parent = " + element.getParent());
                         if (element.getNode() == null || element.getNode().getElementType() != QilletniTypes.ID) return PsiReference.EMPTY_ARRAY;
                         System.out.println("\t^ doing it");
                         // Exclude declaration-name nodes by class name suffix heuristic consistent with generated PSI
