@@ -385,46 +385,24 @@ public class QilletniParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // ELSE_KEYWORD LEFT_CBRACKET body RIGHT_CBRACKET | /*empty*/
+  // ELSE_KEYWORD LEFT_CBRACKET body RIGHT_CBRACKET
   public static boolean else_body(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "else_body")) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _NONE_, ELSE_BODY, "<else body>");
-    r = else_body_0(b, l + 1);
-    if (!r) r = consumeToken(b, ELSE_BODY_1_0);
-    exit_section_(b, l, m, r, false, null);
-    return r;
-  }
-
-  // ELSE_KEYWORD LEFT_CBRACKET body RIGHT_CBRACKET
-  private static boolean else_body_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "else_body_0")) return false;
+    if (!nextTokenIs(b, ELSE_KEYWORD)) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = consumeTokens(b, 0, ELSE_KEYWORD, LEFT_CBRACKET);
     r = r && body(b, l + 1);
     r = r && consumeToken(b, RIGHT_CBRACKET);
-    exit_section_(b, m, null, r);
+    exit_section_(b, m, ELSE_BODY, r);
     return r;
   }
 
   /* ********************************************************** */
-  // (ELSE_KEYWORD IF_KEYWORD LEFT_PAREN expr RIGHT_PAREN LEFT_CBRACKET body RIGHT_CBRACKET)*
+  // ELSE_KEYWORD IF_KEYWORD LEFT_PAREN expr RIGHT_PAREN LEFT_CBRACKET body RIGHT_CBRACKET
   public static boolean elseif_list(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "elseif_list")) return false;
-    Marker m = enter_section_(b, l, _NONE_, ELSEIF_LIST, "<elseif list>");
-    while (true) {
-      int c = current_position_(b);
-      if (!elseif_list_0(b, l + 1)) break;
-      if (!empty_element_parsed_guard_(b, "elseif_list", c)) break;
-    }
-    exit_section_(b, l, m, true, false, null);
-    return true;
-  }
-
-  // ELSE_KEYWORD IF_KEYWORD LEFT_PAREN expr RIGHT_PAREN LEFT_CBRACKET body RIGHT_CBRACKET
-  private static boolean elseif_list_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "elseif_list_0")) return false;
+    if (!nextTokenIs(b, ELSE_KEYWORD)) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = consumeTokens(b, 0, ELSE_KEYWORD, IF_KEYWORD, LEFT_PAREN);
@@ -432,7 +410,7 @@ public class QilletniParser implements PsiParser, LightPsiParser {
     r = r && consumeTokens(b, 0, RIGHT_PAREN, LEFT_CBRACKET);
     r = r && body(b, l + 1);
     r = r && consumeToken(b, RIGHT_CBRACKET);
-    exit_section_(b, m, null, r);
+    exit_section_(b, m, ELSEIF_LIST, r);
     return r;
   }
 
@@ -926,7 +904,7 @@ public class QilletniParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // IF_KEYWORD LEFT_PAREN expr RIGHT_PAREN LEFT_CBRACKET body RIGHT_CBRACKET elseif_list else_body
+  // IF_KEYWORD LEFT_PAREN expr RIGHT_PAREN LEFT_CBRACKET body RIGHT_CBRACKET elseif_list* else_body?
   public static boolean if_stmt(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "if_stmt")) return false;
     if (!nextTokenIs(b, IF_KEYWORD)) return false;
@@ -937,10 +915,28 @@ public class QilletniParser implements PsiParser, LightPsiParser {
     r = r && consumeTokens(b, 0, RIGHT_PAREN, LEFT_CBRACKET);
     r = r && body(b, l + 1);
     r = r && consumeToken(b, RIGHT_CBRACKET);
-    r = r && elseif_list(b, l + 1);
-    r = r && else_body(b, l + 1);
+    r = r && if_stmt_7(b, l + 1);
+    r = r && if_stmt_8(b, l + 1);
     exit_section_(b, m, IF_STMT, r);
     return r;
+  }
+
+  // elseif_list*
+  private static boolean if_stmt_7(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "if_stmt_7")) return false;
+    while (true) {
+      int c = current_position_(b);
+      if (!elseif_list(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "if_stmt_7", c)) break;
+    }
+    return true;
+  }
+
+  // else_body?
+  private static boolean if_stmt_8(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "if_stmt_8")) return false;
+    else_body(b, l + 1);
+    return true;
   }
 
   /* ********************************************************** */

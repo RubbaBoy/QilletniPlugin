@@ -170,11 +170,11 @@ param_name ::= ID {
   implements="com.intellij.psi.PsiNameIdentifierOwner"
 }
 
-if_stmt ::= IF_KEYWORD LEFT_PAREN expr RIGHT_PAREN LEFT_CBRACKET body RIGHT_CBRACKET elseif_list else_body
+if_stmt ::= IF_KEYWORD LEFT_PAREN expr RIGHT_PAREN LEFT_CBRACKET body RIGHT_CBRACKET elseif_list* else_body?
 
-else_body ::= ELSE_KEYWORD LEFT_CBRACKET body RIGHT_CBRACKET | /*empty*/
+else_body ::= ELSE_KEYWORD LEFT_CBRACKET body RIGHT_CBRACKET
 
-elseif_list ::= (ELSE_KEYWORD IF_KEYWORD LEFT_PAREN expr RIGHT_PAREN LEFT_CBRACKET body RIGHT_CBRACKET)*
+elseif_list ::= ELSE_KEYWORD IF_KEYWORD LEFT_PAREN expr RIGHT_PAREN LEFT_CBRACKET body RIGHT_CBRACKET
 
 for_stmt ::= FOR_KEYWORD LEFT_PAREN for_expr RIGHT_PAREN LEFT_CBRACKET body RIGHT_CBRACKET
 

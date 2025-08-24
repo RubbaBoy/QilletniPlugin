@@ -10,11 +10,11 @@ public interface QilletniIfStmt extends PsiElement {
   @NotNull
   QilletniBody getBody();
 
-  @NotNull
+  @Nullable
   QilletniElseBody getElseBody();
 
   @NotNull
-  QilletniElseifList getElseifList();
+  List<QilletniElseifList> getElseifListList();
 
   @NotNull
   QilletniExpr getExpr();

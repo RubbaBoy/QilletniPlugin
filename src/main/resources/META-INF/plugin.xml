@@ -5,10 +5,10 @@
 
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-name -->
-    <name>QilletniPlugin</name>
+    <name>Qilletni Language Support</name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
-    <vendor url="https://www.yourcompany.com">YourCompany</vendor>
+    <vendor url="https://qilletni.dev/">Adam Yarris</vendor>
 
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-description -->
@@ -39,5 +39,8 @@
         <psi.referenceContributor implementation="dev.qilletni.intellij.references.QilletniReferenceContributor"/>
         <lang.findUsagesProvider language="Qilletni" implementationClass="dev.qilletni.intellij.findusages.QilletniFindUsagesProvider"/>
         <renamePsiElementProcessor implementation="dev.qilletni.intellij.refactoring.QilletniRenameEntityAndConstructorProcessor"/>
+
+        <lang.braceMatcher language="Qilletni" implementationClass="dev.qilletni.intellij.QilletniBraceMatcher"/>
+        <lang.quoteHandler language="Qilletni" implementationClass="dev.qilletni.intellij.QilletniQuoteHandler"/>
     </extensions>
 </idea-plugin>

@@ -96,7 +96,6 @@ public interface QilletniTypes {
   IElementType DOUBLE = new QilletniTokenType("DOUBLE");
   IElementType DOUBLE_DOT = new QilletniTokenType("DOUBLE_DOT");
   IElementType DOUBLE_TYPE = new QilletniTokenType("DOUBLE_TYPE");
-  IElementType ELSE_BODY_1_0 = new QilletniTokenType("else_body_1_0");
   IElementType ELSE_KEYWORD = new QilletniTokenType("ELSE_KEYWORD");
   IElementType EMPTY = new QilletniTokenType("EMPTY");
   IElementType ENTITY = new QilletniTokenType("ENTITY");

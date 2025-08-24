@@ -27,27 +27,27 @@ public class QilletniElseBodyImpl extends QilletniPsiElementBase implements Qill
   }
 
   @Override
-  @Nullable
+  @NotNull
   public QilletniBody getBody() {
-    return findChildByClass(QilletniBody.class);
+    return findNotNullChildByClass(QilletniBody.class);
   }
 
   @Override
-  @Nullable
+  @NotNull
   public PsiElement getElseKeyword() {
-    return findChildByType(ELSE_KEYWORD);
+    return findNotNullChildByType(ELSE_KEYWORD);
   }
 
   @Override
-  @Nullable
+  @NotNull
   public PsiElement getLeftCbracket() {
-    return findChildByType(LEFT_CBRACKET);
+    return findNotNullChildByType(LEFT_CBRACKET);
   }
 
   @Override
-  @Nullable
+  @NotNull
   public PsiElement getRightCbracket() {
-    return findChildByType(RIGHT_CBRACKET);
+    return findNotNullChildByType(RIGHT_CBRACKET);
   }
 
 }

@@ -8,9 +8,27 @@ import com.intellij.psi.PsiElement;
 public interface QilletniElseifList extends PsiElement {
 
   @NotNull
-  List<QilletniBody> getBodyList();
+  QilletniBody getBody();
 
   @NotNull
-  List<QilletniExpr> getExprList();
+  QilletniExpr getExpr();
+
+  @NotNull
+  PsiElement getElseKeyword();
+
+  @NotNull
+  PsiElement getIfKeyword();
+
+  @NotNull
+  PsiElement getLeftCbracket();
+
+  @NotNull
+  PsiElement getLeftParen();
+
+  @NotNull
+  PsiElement getRightCbracket();
+
+  @NotNull
+  PsiElement getRightParen();
 
 }

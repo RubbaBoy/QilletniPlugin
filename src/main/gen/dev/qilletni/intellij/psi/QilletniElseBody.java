@@ -7,16 +7,16 @@ import com.intellij.psi.PsiElement;
 
 public interface QilletniElseBody extends PsiElement {
 
-  @Nullable
+  @NotNull
   QilletniBody getBody();
 
-  @Nullable
+  @NotNull
   PsiElement getElseKeyword();
 
-  @Nullable
+  @NotNull
   PsiElement getLeftCbracket();
 
-  @Nullable
+  @NotNull
   PsiElement getRightCbracket();
 
 }

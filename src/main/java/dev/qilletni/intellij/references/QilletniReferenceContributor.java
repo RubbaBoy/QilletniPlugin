@@ -32,6 +32,7 @@ public final class QilletniReferenceContributor extends PsiReferenceContributor 
                         .andNot(PlatformPatterns.psiElement().withParent(QilletniParamName.class))
                         .andNot(PlatformPatterns.psiElement().withParent(QilletniFunctionCall.class))
                         .andNot(PlatformPatterns.psiElement().withParent(QilletniPostfixSuffix.class))
+                        .andNot(PlatformPatterns.psiElement().withParent(QilletniLhsMember.class))
                         .andNot(PlatformPatterns.psiElement().withParent(DummyHolder.class)),
                 new PsiReferenceProvider() {
                     @Override
@@ -51,7 +52,8 @@ public final class QilletniReferenceContributor extends PsiReferenceContributor 
                         }
                         System.out.println("\t^ eally");
                         var range = TextRange.from(0, element.getTextLength());
-                        return new PsiReference[]{ new QilletniVariableReference(element, range) };
+                        // Prefer resolving to an entity definition when possible (e.g., `new Foo()`, `Foo.bar()`), fallback to variables
+                        return new PsiReference[]{ new QilletniEntityReference(element, range), new QilletniVariableReference(element, range) };
                     }
                 }
         );
@@ -60,7 +62,8 @@ public final class QilletniReferenceContributor extends PsiReferenceContributor 
         registrar.registerReferenceProvider(
                 PlatformPatterns.psiElement(QilletniTypes.ID)
                         .withParent(QilletniFunctionCall.class)
-                        .andNot(PlatformPatterns.psiElement().withSuperParent(2, QilletniPostfixSuffix.class)),
+                        .andNot(PlatformPatterns.psiElement().withSuperParent(2, QilletniPostfixSuffix.class))
+                        .andNot(PlatformPatterns.psiElement().withSuperParent(2, QilletniLhsCore.class)),
                 new PsiReferenceProvider() {
                     @Override
                     public PsiReference @NotNull [] getReferencesByElement(@NotNull PsiElement element, @NotNull ProcessingContext context) {
@@ -83,6 +86,21 @@ public final class QilletniReferenceContributor extends PsiReferenceContributor 
                 PlatformPatterns.psiElement(QilletniTypes.ID)
                         .withParent(QilletniFunctionCall.class)
                         .withSuperParent(2, QilletniPostfixSuffix.class),
+                new MemberReferenceProvider()
+        );
+
+        // 3) Assignment LHS member properties: IDs that are direct children of lhs_member (i.e., `lhs_core . ID` segments)
+        registrar.registerReferenceProvider(
+                PlatformPatterns.psiElement(QilletniTypes.ID)
+                        .withParent(QilletniLhsMember.class),
+                new MemberReferenceProvider()
+        );
+
+        // 4) Assignment LHS member methods: IDs under FunctionCall whose super parent is lhs_core (i.e., `lhs_core . name(args)`)
+        registrar.registerReferenceProvider(
+                PlatformPatterns.psiElement(QilletniTypes.ID)
+                        .withParent(QilletniFunctionCall.class)
+                        .withSuperParent(2, QilletniLhsCore.class),
                 new MemberReferenceProvider()
         );
     }

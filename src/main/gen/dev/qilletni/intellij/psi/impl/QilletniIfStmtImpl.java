@@ -33,15 +33,15 @@ public class QilletniIfStmtImpl extends QilletniPsiElementBase implements Qillet
   }
 
   @Override
-  @NotNull
+  @Nullable
   public QilletniElseBody getElseBody() {
-    return findNotNullChildByClass(QilletniElseBody.class);
+    return findChildByClass(QilletniElseBody.class);
   }
 
   @Override
   @NotNull
-  public QilletniElseifList getElseifList() {
-    return findNotNullChildByClass(QilletniElseifList.class);
+  public List<QilletniElseifList> getElseifListList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, QilletniElseifList.class);
   }
 
   @Override

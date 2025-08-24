@@ -28,14 +28,50 @@ public class QilletniElseifListImpl extends QilletniPsiElementBase implements Qi
 
   @Override
   @NotNull
-  public List<QilletniBody> getBodyList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, QilletniBody.class);
+  public QilletniBody getBody() {
+    return findNotNullChildByClass(QilletniBody.class);
   }
 
   @Override
   @NotNull
-  public List<QilletniExpr> getExprList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, QilletniExpr.class);
+  public QilletniExpr getExpr() {
+    return findNotNullChildByClass(QilletniExpr.class);
+  }
+
+  @Override
+  @NotNull
+  public PsiElement getElseKeyword() {
+    return findNotNullChildByType(ELSE_KEYWORD);
+  }
+
+  @Override
+  @NotNull
+  public PsiElement getIfKeyword() {
+    return findNotNullChildByType(IF_KEYWORD);
+  }
+
+  @Override
+  @NotNull
+  public PsiElement getLeftCbracket() {
+    return findNotNullChildByType(LEFT_CBRACKET);
+  }
+
+  @Override
+  @NotNull
+  public PsiElement getLeftParen() {
+    return findNotNullChildByType(LEFT_PAREN);
+  }
+
+  @Override
+  @NotNull
+  public PsiElement getRightCbracket() {
+    return findNotNullChildByType(RIGHT_CBRACKET);
+  }
+
+  @Override
+  @NotNull
+  public PsiElement getRightParen() {
+    return findNotNullChildByType(RIGHT_PAREN);
   }
 
 }
