@@ -37,9 +37,7 @@ public final class QilletniReferenceContributor extends PsiReferenceContributor 
                 new PsiReferenceProvider() {
                     @Override
                     public PsiReference @NotNull [] getReferencesByElement(@NotNull PsiElement element, @NotNull ProcessingContext context) {
-                        System.out.println("Here we are in QilletniReferenceContributor for " + element.getText() + "  parent = " + element.getParent());
                         if (element.getNode() == null || element.getNode().getElementType() != QilletniTypes.ID) return PsiReference.EMPTY_ARRAY;
-                        System.out.println("\t^ doing it");
                         // Exclude declaration-name nodes by class name suffix heuristic consistent with generated PSI
                         var parent = element.getParent();
                         if (parent != null) {
@@ -50,7 +48,6 @@ public final class QilletniReferenceContributor extends PsiReferenceContributor 
                                 return PsiReference.EMPTY_ARRAY;
                             }
                         }
-                        System.out.println("\t^ eally");
                         var range = TextRange.from(0, element.getTextLength());
                         // Prefer resolving to an entity definition when possible (e.g., `new Foo()`, `Foo.bar()`), fallback to variables
                         return new PsiReference[]{ new QilletniEntityReference(element, range), new QilletniVariableReference(element, range) };
