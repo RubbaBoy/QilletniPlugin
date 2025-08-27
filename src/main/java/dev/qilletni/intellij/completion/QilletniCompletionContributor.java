@@ -95,7 +95,7 @@ public final class QilletniCompletionContributor extends CompletionContributor {
             for (var e : entities) {
                 var nameEl = PsiTreeUtil.findChildOfType(e, QilletniEntityName.class);
                 if (nameEl == null) continue;
-                result.addElement(LookupElementBuilder.create(nameEl.getText())
+                    result.addElement(LookupElementBuilder.create(e, nameEl.getText())
                         .withIcon(AllIcons.Nodes.Class));
             }
         }
@@ -162,7 +162,7 @@ public final class QilletniCompletionContributor extends CompletionContributor {
             if (entity == null) return;
 
             for (var p : PsiTreeUtil.findChildrenOfType(entity, QilletniPropertyName.class)) {
-                result.addElement(LookupElementBuilder.create(p.getText())
+                    result.addElement(LookupElementBuilder.create(p, p.getText())
                         .withIcon(AllIcons.Nodes.ObjectTypeAttribute)
                         .withTypeText(receiverType, true));
             }
@@ -183,7 +183,7 @@ public final class QilletniCompletionContributor extends CompletionContributor {
                 if (nameEl == null) {
                     continue;
                 }
-                result.addElement(LookupElementBuilder.create(nameEl.getText())
+                result.addElement(LookupElementBuilder.create(f, nameEl.getText())
                         .withIcon(AllIcons.Nodes.Method)
                         .withInsertHandler(CALL_PARENS_INSERT_HANDLER));
             }
@@ -283,7 +283,7 @@ public final class QilletniCompletionContributor extends CompletionContributor {
                     if (isStatic) continue;
                 }
                 var functionArgs = def.getFunctionDefParams().getParamNameList().stream().map(QilletniParamName::getText).collect(Collectors.joining(", ", "(", ")"));
-                result.addElement(LookupElementBuilder.create(nameEl.getText())
+                result.addElement(LookupElementBuilder.create(def, nameEl.getText())
                         .bold()
                         .appendTailText(functionArgs, true)
                         .withIcon(AllIcons.Nodes.Method)
@@ -298,7 +298,7 @@ public final class QilletniCompletionContributor extends CompletionContributor {
                 var nameEl = PsiTreeUtil.findChildOfType(def, QilletniFunctionName.class);
                 if (nameEl == null) continue;
                 var functionArgs = def.getFunctionDefParams().getParamNameList().stream().map(QilletniParamName::getText).collect(Collectors.joining(", ", "(", ")"));
-                result.addElement(LookupElementBuilder.create(nameEl.getText())
+                result.addElement(LookupElementBuilder.create(def, nameEl.getText())
                         .bold()
                         .appendTailText(functionArgs, true)
                         .withIcon(AllIcons.Nodes.MethodReference)

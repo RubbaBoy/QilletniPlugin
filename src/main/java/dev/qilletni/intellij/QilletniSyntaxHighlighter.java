@@ -10,6 +10,7 @@ import dev.qilletni.intellij.psi.QilletniTypes;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.intellij.openapi.editor.colors.TextAttributesKey.createTextAttributesKey;
@@ -37,12 +38,13 @@ public final class QilletniSyntaxHighlighter implements SyntaxHighlighter {
 
     private static final Map<IElementType, TextAttributesKey[]> KEYS = new HashMap<>();
 
+    public static final List<IElementType> NATIVE_TYPES_LIST = List.of(QilletniTypes.ANY_TYPE, QilletniTypes.INT_TYPE, QilletniTypes.DOUBLE_TYPE,
+            QilletniTypes.STRING_TYPE, QilletniTypes.BOOLEAN_TYPE, QilletniTypes.COLLECTION_TYPE,
+            QilletniTypes.SONG_TYPE, QilletniTypes.ALBUM_TYPE, QilletniTypes.JAVA_TYPE, QilletniTypes.WEIGHTS_KEYWORD);
+
     static {
         // Types
-        putAll(new TextAttributesKey[]{TYPE},
-                QilletniTypes.ANY_TYPE, QilletniTypes.INT_TYPE, QilletniTypes.DOUBLE_TYPE,
-                QilletniTypes.STRING_TYPE, QilletniTypes.BOOLEAN_TYPE, QilletniTypes.COLLECTION_TYPE,
-                QilletniTypes.SONG_TYPE, QilletniTypes.ALBUM_TYPE, QilletniTypes.JAVA_TYPE, QilletniTypes.WEIGHTS_KEYWORD);
+        putAll(new TextAttributesKey[]{KEYWORD}, NATIVE_TYPES_LIST.toArray(IElementType[]::new));
 
         // Keywords
         putAll(new TextAttributesKey[]{KEYWORD},

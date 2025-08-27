@@ -17,7 +17,7 @@ import java.util.Map;
 public final class QilletniColorSettingsPage implements ColorSettingsPage {
     private static final AttributesDescriptor[] DESCRIPTORS = new AttributesDescriptor[]{
             new AttributesDescriptor("Keyword", QilletniSyntaxHighlighter.KEYWORD),
-            new AttributesDescriptor("Type", QilletniSyntaxHighlighter.TYPE),
+            new AttributesDescriptor("Type", QilletniSyntaxHighlighter.KEYWORD),
             new AttributesDescriptor("Identifier", QilletniSyntaxHighlighter.IDENTIFIER),
             new AttributesDescriptor("Number", QilletniSyntaxHighlighter.NUMBER),
             new AttributesDescriptor("String", QilletniSyntaxHighlighter.STRING),
