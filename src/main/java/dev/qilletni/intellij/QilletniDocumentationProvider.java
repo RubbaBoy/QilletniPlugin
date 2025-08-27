@@ -15,13 +15,8 @@ public class QilletniDocumentationProvider extends AbstractDocumentationProvider
     public @Nullable String generateDoc(PsiElement element, @Nullable PsiElement originalElement) {
         String doc = QilletniDocUtil.renderHtmlDocFor(element);
         if (doc == null || doc.isEmpty()) return null;
-        StringBuilder sb = new StringBuilder();
-        sb.append(DocumentationMarkup.DEFINITION_START)
-          .append("Documentation")
-          .append(DocumentationMarkup.DEFINITION_END);
-        sb.append(DocumentationMarkup.CONTENT_START)
-          .append(doc)
-          .append(DocumentationMarkup.CONTENT_END);
-        return sb.toString();
+        return DocumentationMarkup.CONTENT_START +
+                doc +
+                DocumentationMarkup.CONTENT_END;
     }
 }
