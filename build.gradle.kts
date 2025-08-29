@@ -19,6 +19,11 @@ repositories {
 dependencies {
     implementation("com.vladsch.flexmark:flexmark-all:0.64.8")
 
+    implementation("se.michaelthelin.spotify:spotify-web-api-java:9.3.0") {
+        exclude(group = "org.slf4j", module = "slf4j-api")
+    }
+
+
     intellijPlatform {
         create("IC", "2025.1.4.1")
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)

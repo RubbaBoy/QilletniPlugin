@@ -1479,12 +1479,12 @@ public class QilletniParser implements PsiParser, LightPsiParser {
   //                | BOOL
   //                | list_expression
   //                | entity_initialize
-  //                | str_expr
   //                | int_expr
   //                | double_expr
-  //                | collection_expr
   //                | song_expr
   //                | album_expr
+  //                | collection_expr
+  //                | str_expr
   //                | weights_expr
   //                | java_expr
   //                | is_expr
@@ -1498,12 +1498,12 @@ public class QilletniParser implements PsiParser, LightPsiParser {
     if (!r) r = consumeToken(b, BOOL);
     if (!r) r = list_expression(b, l + 1);
     if (!r) r = entity_initialize(b, l + 1);
-    if (!r) r = str_expr(b, l + 1);
     if (!r) r = int_expr(b, l + 1);
     if (!r) r = double_expr(b, l + 1);
-    if (!r) r = collection_expr(b, l + 1);
     if (!r) r = song_expr(b, l + 1);
     if (!r) r = album_expr(b, l + 1);
+    if (!r) r = collection_expr(b, l + 1);
+    if (!r) r = str_expr(b, l + 1);
     if (!r) r = weights_expr(b, l + 1);
     if (!r) r = java_expr(b, l + 1);
     if (!r) r = is_expr(b, l + 1);

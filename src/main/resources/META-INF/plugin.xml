@@ -13,8 +13,7 @@
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-description -->
     <description><![CDATA[
-        Enter short description for your plugin here.<br>
-        <em>most HTML tags may be used</em>
+        Qilletni language support: syntax, references, and integrations. Adds Spotify-assisted selection for songs, albums, and collections.
     ]]></description>
 
     <!-- Product and plugin compatibility requirements.
@@ -43,5 +42,21 @@
 
         <lang.braceMatcher language="Qilletni" implementationClass="dev.qilletni.intellij.QilletniBraceMatcher"/>
         <lang.quoteHandler language="Qilletni" implementationClass="dev.qilletni.intellij.QilletniQuoteHandler"/>
+        <intentionAction>
+            <language>Qilletni</language>
+            <category>Qilletni</category>
+            <className>dev.qilletni.intellij.intentions.QilletniSelectSpotifyIntention</className>
+            <descriptionDirectoryName>dev.qilletni.intellij.intentions.QilletniSelectSpotifyIntention</descriptionDirectoryName>
+        </intentionAction>
+        <codeInsight.lineMarkerProvider language="Qilletni" implementationClass="dev.qilletni.intellij.gutter.QilletniMusicLineMarkerProvider"/>
+        <applicationConfigurable instance="dev.qilletni.intellij.settings.QilletniSpotifyConfigurable" id="dev.qilletni.intellij.settings.QilletniSpotifyConfigurable" displayName="Qilletni: Spotify" parentId="tools"/>
     </extensions>
+
+    <actions>
+        <action id="dev.qilletni.intellij.actions.QilletniSelectSpotifyAction" class="dev.qilletni.intellij.actions.QilletniSelectSpotifyAction" text="Qilletni: Select Spotify music">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <keyboard-shortcut keymap="Default for XWin" first-keystroke="ctrl alt M"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta alt M"/>
+        </action>
+    </actions>
 </idea-plugin>

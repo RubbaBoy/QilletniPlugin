@@ -77,12 +77,12 @@ primary_expr ::= LEFT_PAREN expr RIGHT_PAREN
                | BOOL
                | list_expression
                | entity_initialize
-               | str_expr
                | int_expr
                | double_expr
-               | collection_expr
                | song_expr
                | album_expr
+               | collection_expr
+               | str_expr
                | weights_expr
                | java_expr
                | is_expr
