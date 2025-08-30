@@ -5,7 +5,9 @@ import com.intellij.codeInsight.daemon.LineMarkerProvider;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.editor.markup.GutterIconRenderer;
 import com.intellij.psi.PsiElement;
+import dev.qilletni.intellij.spotify.QilletniSpotifyService;
 import dev.qilletni.intellij.spotify.QilletniSpotifyService.MusicType;
+import dev.qilletni.intellij.spotify.QilletniSpotifyService.MusicTypeContext;
 import dev.qilletni.intellij.ui.SelectSpotifyDialog;
 import dev.qilletni.intellij.util.QilletniMusicPsiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -26,13 +28,13 @@ public class QilletniMusicLineMarkerProvider implements LineMarkerProvider {
                 psi -> "Select Spotify music…",
                 (e, elt) -> {
                     var project = elt.getProject();
-                    var dialog = new SelectSpotifyDialog(project, ctx.type);
+                    var dialog = new SelectSpotifyDialog(project, ctx.type());
                     if (dialog.showAndGet()) {
                         var editor = com.intellij.openapi.fileEditor.FileEditorManager.getInstance(project).getSelectedTextEditor();
                         if (editor != null) {
                             dialog.getSelection().ifPresent(choice ->
                                     QilletniMusicPsiUtil.applySelection(project, editor, ctx, choice,
-                                            ctx.type == MusicType.SONG && dialog.includeKeyword())
+                                            ctx.type() == MusicTypeContext.SONG && dialog.includeKeyword())
                             );
                         }
                     }

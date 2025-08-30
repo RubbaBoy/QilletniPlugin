@@ -48,6 +48,12 @@
             <className>dev.qilletni.intellij.intentions.QilletniSelectSpotifyIntention</className>
             <descriptionDirectoryName>dev.qilletni.intellij.intentions.QilletniSelectSpotifyIntention</descriptionDirectoryName>
         </intentionAction>
+        <intentionAction>
+            <language>Qilletni</language>
+            <category>Qilletni</category>
+            <className>dev.qilletni.intellij.intentions.QilletniInsertMusicIntention</className>
+            <descriptionDirectoryName>dev.qilletni.intellij.intentions.QilletniInsertMusicIntention</descriptionDirectoryName>
+        </intentionAction>
         <codeInsight.lineMarkerProvider language="Qilletni" implementationClass="dev.qilletni.intellij.gutter.QilletniMusicLineMarkerProvider"/>
         <applicationConfigurable instance="dev.qilletni.intellij.settings.QilletniSpotifyConfigurable" id="dev.qilletni.intellij.settings.QilletniSpotifyConfigurable" displayName="Qilletni: Spotify" parentId="tools"/>
     </extensions>

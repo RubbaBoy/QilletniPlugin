@@ -4,11 +4,30 @@ import com.intellij.codeInsight.completion.CompletionContributor;
 import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.codeInsight.completion.CompletionProvider;
 import com.intellij.codeInsight.completion.CompletionResultSet;
+import com.intellij.codeInsight.completion.CompletionSorter;
 import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.codeInsight.completion.InsertHandler;
+import com.intellij.codeInsight.completion.CompletionInitializationContext;
+import com.intellij.codeInsight.completion.CompletionUtil;
+import com.intellij.codeInsight.completion.CompletionUtilCore;
+import com.intellij.codeInsight.lookup.LookupEx;
+import com.intellij.codeInsight.lookup.LookupEvent;
+import com.intellij.codeInsight.lookup.LookupListener;
+import com.intellij.openapi.actionSystem.CustomShortcutSet;
+import com.intellij.openapi.util.Key;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.codeInsight.lookup.LookupElementWeigher;
 import com.intellij.icons.AllIcons;
+
+// Keybinding + lookup utilities
+import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.actionSystem.CommonDataKeys;
+import com.intellij.codeInsight.completion.CodeCompletionHandlerBase;
+import com.intellij.codeInsight.lookup.LookupManager;
+import com.intellij.openapi.editor.Editor;
 import com.intellij.patterns.PlatformPatterns;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.TokenType;
@@ -34,9 +53,20 @@ import dev.qilletni.intellij.psi.QilletniVarDeclaration;
 import dev.qilletni.intellij.psi.QilletniVarName;
 import dev.qilletni.intellij.resolve.QilletniIndexFacade;
 import dev.qilletni.intellij.resolve.QilletniResolveUtil;
+import dev.qilletni.intellij.spotify.QilletniSpotifyService.MusicTypeContext;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.stream.Collectors;
+
+import dev.qilletni.intellij.util.QilletniMusicPsiUtil;
+import dev.qilletni.intellij.spotify.QilletniSpotifyService;
+import dev.qilletni.intellij.spotify.QilletniSpotifyService.MusicChoice;
+import dev.qilletni.intellij.spotify.QilletniSpotifyService.MusicType;
+import dev.qilletni.intellij.spotify.auth.SpotifyAuthService;
+
+import javax.swing.KeyStroke;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Context-aware code completion for Qilletni:
@@ -69,13 +99,24 @@ public final class QilletniCompletionContributor extends CompletionContributor {
                 PlatformPatterns.psiElement(QilletniTypes.ID).withParent(QilletniPostfixSuffix.class),
                 new MemberPropertiesCompletionProvider());
 
-
         // LHS properties: IDs that are direct children of lhs_member
         extend(CompletionType.BASIC,
                 PlatformPatterns.psiElement(QilletniTypes.ID).withParent(QilletniLhsMember.class),
                 new LhsMemberPropertiesCompletionProvider());
 
+        // Spotify inline completion: STRINGs in music expressions (Ctrl+Space only)
+        extend(CompletionType.BASIC,
+                PlatformPatterns.psiElement(QilletniTypes.STRING),
+                new MusicCompletionProvider());
+    }
 
+    @Override
+    public void beforeCompletion(@NotNull CompletionInitializationContext context) {
+        PsiElement at = context.getFile().findElementAt(context.getStartOffset());
+        if (at != null && at.getNode() != null && at.getNode().getElementType() == QilletniTypes.STRING) {
+            // Avoid inserting a dummy into string literals so we can extract a clean query
+            context.setDummyIdentifier("");
+        }
     }
 
     // --- Providers ---
@@ -97,6 +138,160 @@ public final class QilletniCompletionContributor extends CompletionContributor {
                 if (nameEl == null) continue;
                     result.addElement(LookupElementBuilder.create(e, nameEl.getText())
                         .withIcon(AllIcons.Nodes.Class));
+            }
+        }
+    }
+
+    // Spotify inline completion provider for music strings (Ctrl+Space only)
+    private static final class MusicCompletionProvider extends CompletionProvider<CompletionParameters> {
+        private static final Key<Integer> ORDER_KEY = Key.create("qilletni.spotify.order");
+        private static final LookupElementWeigher ORDER_WEIGHER = new LookupElementWeigher("spotifyOrder") {
+            @Override
+            public Comparable weigh(LookupElement element) {
+                Integer idx = element.getUserData(ORDER_KEY);
+                return idx != null ? idx : Integer.MAX_VALUE;
+            }
+        };
+
+        // Editor-scoped filter mode set by keybindings in the active lookup
+        private static final Key<MusicTypeContext> FILTER_MODE_KEY = Key.create("qilletni.spotify.filterMode");
+        // Prevent double-registration of shortcuts per lookup instance
+        private static final Key<Boolean> SHORTCUTS_INSTALLED_KEY = Key.create("qilletni.spotify.shortcutsInstalled");
+
+        // Simple action that toggles a filter and re-triggers completion
+        private static final class FilterAction extends AnAction {
+            private final MusicTypeContext type;
+            FilterAction(MusicTypeContext type) { this.type = type; }
+            @Override
+            public void actionPerformed(@NotNull AnActionEvent e) {
+                var project = e.getProject();
+                Editor editor = e.getData(CommonDataKeys.EDITOR);
+                if (project == null || editor == null) return;
+                editor.putUserData(FILTER_MODE_KEY, type);
+                new CodeCompletionHandlerBase(CompletionType.BASIC).invokeCompletion(project, editor);
+            }
+        }
+
+        // Register Alt+S / Alt+A / Alt+C on the active lookup component (once per popup instance)
+        private static void installLookupShortcuts(@NotNull Editor editor) {
+            LookupEx lookup = LookupManager.getActiveLookup(editor);
+            if (lookup == null) return;
+            if (Boolean.TRUE.equals(editor.getUserData(SHORTCUTS_INSTALLED_KEY))) return;
+
+            var comp = editor.getComponent();
+            var songs = new FilterAction(MusicTypeContext.SONG);
+            var albums = new FilterAction(MusicTypeContext.ALBUM);
+            var collections = new FilterAction(MusicTypeContext.COLLECTION);
+
+
+            songs.registerCustomShortcutSet(new CustomShortcutSet(KeyStroke.getKeyStroke("alt S")), comp);
+            albums.registerCustomShortcutSet(CustomShortcutSet.fromString("alt A"), comp);
+            collections.registerCustomShortcutSet(CustomShortcutSet.fromString("alt C"), comp);
+
+            // Mark installed on the editor to avoid duplicate registrations
+            editor.putUserData(SHORTCUTS_INSTALLED_KEY, Boolean.TRUE);
+
+            // Reset flags when the lookup is closed
+            lookup.addLookupListener(new LookupListener() {
+                @Override
+                public void lookupCanceled(LookupEvent event) {
+                    editor.putUserData(SHORTCUTS_INSTALLED_KEY, null);
+                    editor.putUserData(FILTER_MODE_KEY, null);
+                }
+            });
+        }
+
+        @Override
+        protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
+            // Only on explicit invocation (Ctrl+Space)
+            if (parameters.getInvocationCount() <= 0) return;
+            PsiElement el = CompletionUtil.getOriginalOrSelf(parameters.getPosition());
+            if (el == null || el.getNode() == null || el.getNode().getElementType() != QilletniTypes.STRING) {
+                return;
+            }
+            var ctxOpt = QilletniMusicPsiUtil.detectContext(el);
+            if (ctxOpt.isEmpty()) {
+                return;
+            }
+            var musicCtx = ctxOpt.get();
+            if (!SpotifyAuthService.getInstance().isSignedIn()) {
+                return;
+            }
+
+            // Extract query from STRING token (strip quotes and completion dummy)
+            String text = el.getText();
+            if (text == null) {
+                return;
+            }
+            // Remove the dummy identifier that may be injected into the completion copy
+            text = StringUtil.replace(text, CompletionUtilCore.DUMMY_IDENTIFIER_TRIMMED, "");
+            String query = text.length() >= 2 && text.startsWith("\"") && text.endsWith("\"") ? text.substring(1, text.length() - 1) : text;
+
+            query = query.trim();
+            if (query.isEmpty()) {
+                return;
+            }
+
+            // Advertise keyboard filters and install them on the active lookup
+            result.addLookupAdvertisement("Press Alt+S / Alt+A / Alt+C to filter: Songs / Albums / Collections");
+            installLookupShortcuts(parameters.getEditor());
+
+            // Parse text filter optionally (kept as fallback), but keybind filter has precedence
+            MusicTypeContext keybindFilter = parameters.getEditor().getUserData(FILTER_MODE_KEY);
+
+            var service = new QilletniSpotifyService();
+            java.util.List<MusicChoice> results;
+            try {
+                // Determine search type: keybind filter > context type > ambiguous
+                var baseType = musicCtx.type();
+                var searchType = keybindFilter != null ? keybindFilter : baseType;
+
+                results = switch (searchType) {
+                    case MusicTypeContext.SONG -> service.searchTracks(query, 12, 0).join();
+                    case MusicTypeContext.ALBUM -> service.searchAlbums(query, 12, 0).join();
+                    case MusicTypeContext.COLLECTION -> service.searchPlaylists(query, 12, 0).join();
+                    case MusicTypeContext.AMBIGUOUS -> service.searchAny(query, 4, 0).join(); // Limit is smaller because this is across all types
+                };
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                return; // fail silent in completion
+            }
+            if (results == null || results.isEmpty()) return;
+
+            // Show results regardless of typed prefix and preserve explicit insertion order via custom weigher
+            CompletionSorter sorter = CompletionSorter.defaultSorter(parameters, result.getPrefixMatcher())
+                    .weighBefore("priority", ORDER_WEIGHER);
+            CompletionResultSet rs = result.withRelevanceSorter(sorter).withPrefixMatcher("");
+
+            int index = 0;
+            for (var mc : results) {
+                String tail = switch (mc.type()) {
+                    case SONG, ALBUM -> String.join(", ", mc.artists() == null ? java.util.List.of() : mc.artists());
+                    case COLLECTION -> mc.owner() == null ? "" : mc.owner();
+                };
+                String typeText = switch (mc.type()) {
+                    case SONG -> "Spotify Song";
+                    case ALBUM -> "Spotify Album";
+                    case COLLECTION -> "Spotify Collection";
+                };
+                var builder = LookupElementBuilder.create(mc, mc.name())
+                        .withIcon(AllIcons.Actions.Search)
+                        .withTailText(tail.isEmpty() ? "" : " — " + tail, true)
+                        .withTypeText(typeText, true)
+                        .withInsertHandler((insCtx, item) -> {
+                            var choice = (MusicChoice) item.getObject();
+                            var project = insCtx.getProject();
+                            var editor = insCtx.getEditor();
+                            PsiElement pos = insCtx.getFile().findElementAt(editor.getCaretModel().getOffset());
+                            var c2 = pos != null ? QilletniMusicPsiUtil.detectContext(pos) : java.util.Optional.<QilletniMusicPsiUtil.Context>empty();
+                            if (c2.isPresent()) {
+                                var ctx2 = c2.get();
+                                boolean includeSongKeyword = false; // default OFF as requested
+                                QilletniMusicPsiUtil.applySelection(project, editor, ctx2, choice, includeSongKeyword);
+                            }
+                        });
+                builder.putUserData(ORDER_KEY, index++);
+                rs.addElement(builder);
             }
         }
     }

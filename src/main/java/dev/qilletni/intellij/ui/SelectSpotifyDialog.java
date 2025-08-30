@@ -9,8 +9,8 @@ import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.JBImageIcon;
 import com.intellij.util.ui.JBUI;
 import dev.qilletni.intellij.spotify.QilletniSpotifyService;
+import dev.qilletni.intellij.spotify.QilletniSpotifyService.MusicTypeContext;
 import dev.qilletni.intellij.spotify.auth.SpotifyAuthService;
-import com.intellij.ide.actions.ShowSettingsUtilImpl;
 import com.intellij.openapi.options.ShowSettingsUtil;
 import dev.qilletni.intellij.spotify.QilletniSpotifyService.MusicChoice;
 import dev.qilletni.intellij.spotify.QilletniSpotifyService.MusicType;
@@ -53,13 +53,14 @@ public class SelectSpotifyDialog extends DialogWrapper {
     private JPanel settingsPanel;
     private JButton openSettingsButton;
 
-    public SelectSpotifyDialog(Project project, MusicType initialType) {
+    public SelectSpotifyDialog(Project project, MusicTypeContext initialType) {
         super(project, true);
         this.project = project;
-        this.selectedType = initialType;
+        this.selectedType = MusicType.fromContext(initialType);
+
         setTitle("Select Spotify Music");
         includeSongKeyword = new JBCheckBox("Include \"song\" keyword", false); // default OFF per spec
-        includeSongKeyword.setEnabled(initialType == MusicType.SONG);
+        includeSongKeyword.setEnabled(initialType == MusicTypeContext.SONG);
         debounceTimer = new Timer(300, e -> performSearch());
         debounceTimer.setRepeats(false);
         init();
@@ -151,16 +152,16 @@ public class SelectSpotifyDialog extends DialogWrapper {
             root.setBorder(JBUI.Borders.empty(4));
             var iconLabel = new JLabel();
             iconLabel.setPreferredSize(new Dimension(JBUI.scale(24), JBUI.scale(24)));
-            if (value.imageUrl != null) {
-                iconLabel.setIcon(getIcon(value.imageUrl));
+            if (value.imageUrl() != null) {
+                iconLabel.setIcon(getIcon(value.imageUrl()));
             }
             root.add(iconLabel, BorderLayout.WEST);
             var textPanel = new JPanel(new BorderLayout());
-            var name = new JLabel(value.name);
+            var name = new JLabel(value.name());
             name.setFont(name.getFont().deriveFont(Font.BOLD));
-            var secondary = switch (value.type) {
-                case SONG, ALBUM -> String.join(", ", value.artists == null ? java.util.List.of() : value.artists);
-                case COLLECTION -> value.owner != null ? value.owner : "";
+            var secondary = switch (value.type()) {
+                case SONG, ALBUM -> String.join(", ", value.artists() == null ? java.util.List.of() : value.artists());
+                case COLLECTION -> value.owner() != null ? value.owner() : "";
             };
             var meta = new JLabel(secondary);
             meta.setForeground(UIManager.getColor("Label.disabledForeground"));
@@ -251,24 +252,24 @@ public class SelectSpotifyDialog extends DialogWrapper {
         // Filter
         if (!filter.isEmpty()) {
             items.removeIf(mc -> {
-                var name = mc.name != null ? mc.name.toLowerCase() : "";
-                var meta = switch (mc.type) {
-                    case SONG, ALBUM -> String.join(", ", mc.artists == null ? java.util.List.of() : mc.artists).toLowerCase();
-                    case COLLECTION -> mc.owner != null ? mc.owner.toLowerCase() : "";
+                var name = mc.name() != null ? mc.name().toLowerCase() : "";
+                var meta = switch (mc.type()) {
+                    case SONG, ALBUM -> String.join(", ", mc.artists() == null ? java.util.List.of() : mc.artists()).toLowerCase();
+                    case COLLECTION -> mc.owner() != null ? mc.owner().toLowerCase() : "";
                 };
                 return !(name.contains(filter) || meta.contains(filter));
             });
         }
         // Sort
         if ("Name".equals(sortKey)) {
-            items.sort(java.util.Comparator.comparing(mc -> mc.name == null ? "" : mc.name, String.CASE_INSENSITIVE_ORDER));
+            items.sort(java.util.Comparator.comparing(mc -> mc.name() == null ? "" : mc.name(), String.CASE_INSENSITIVE_ORDER));
         } else if ("Year".equals(sortKey)) {
             items.sort((a, b) -> {
-                Integer ya = a.year == null ? Integer.MIN_VALUE : a.year;
-                Integer yb = b.year == null ? Integer.MIN_VALUE : b.year;
+                Integer ya = a.year() == null ? Integer.MIN_VALUE : a.year();
+                Integer yb = b.year() == null ? Integer.MIN_VALUE : b.year();
                 int cmp = Integer.compare(yb, ya); // desc
                 if (cmp != 0) return cmp;
-                return (a.name == null ? "" : a.name).compareToIgnoreCase(b.name == null ? "" : b.name);
+                return (a.name() == null ? "" : a.name()).compareToIgnoreCase(b.name() == null ? "" : b.name());
             });
         }
         // Push back

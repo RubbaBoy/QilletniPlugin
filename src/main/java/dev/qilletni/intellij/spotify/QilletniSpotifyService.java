@@ -11,8 +11,8 @@ import se.michaelthelin.spotify.model_objects.specification.*;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -26,20 +26,21 @@ public final class QilletniSpotifyService {
     private static final String TOKEN_KEY = "qilletni.spotify.token"; // deprecated
     private static final Executor EXEC = Executors.newCachedThreadPool();
 
-    public enum MusicType { SONG, ALBUM, COLLECTION }
+    public enum MusicType {
+        SONG, ALBUM, COLLECTION;
 
-    public static final class MusicChoice {
-        public final MusicType type;
-        public final String id;
-        public final String name;
-        public final List<String> artists;
-        public final String owner;
-        public final Integer year;
-        public final String imageUrl;
-        public MusicChoice(MusicType type, String id, String name, List<String> artists, String owner, Integer year, String imageUrl) {
-            this.type = type; this.id = id; this.name = name; this.artists = artists; this.owner = owner; this.year = year; this.imageUrl = imageUrl;
+        public static MusicType fromContext(MusicTypeContext ctx) {
+            return switch (ctx) {
+                case SONG, AMBIGUOUS -> SONG;
+                case ALBUM -> ALBUM;
+                case COLLECTION -> COLLECTION;
+            };
         }
     }
+
+    public enum MusicTypeContext { SONG, ALBUM, COLLECTION, AMBIGUOUS }
+
+    public record MusicChoice(MusicType type, String id, String name, List<String> artists, String owner, Integer year, String imageUrl) {}
 
     private SpotifyApi api() {
         String token;
@@ -58,15 +59,7 @@ public final class QilletniSpotifyService {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 var result = api().searchTracks(q).limit(limit).offset(offset).build().execute();
-                List<MusicChoice> list = new ArrayList<>();
-                for (Track t : result.getItems()) {
-                    List<String> artists = new ArrayList<>();
-                    for (ArtistSimplified a : t.getArtists()) artists.add(a.getName());
-                    String img = firstImageUrl(t.getAlbum());
-                    Integer year = parseYear(t.getAlbum());
-                    list.add(new MusicChoice(MusicType.SONG, t.getId(), t.getName(), artists, null, year, img));
-                }
-                return list;
+                return toSongChoice(asNonNullList(result.getItems()));
             } catch (IOException | SpotifyWebApiException | org.apache.hc.core5.http.ParseException e) {
                 throw new RuntimeException(e);
             }
@@ -77,15 +70,7 @@ public final class QilletniSpotifyService {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 var result = api().searchAlbums(q).limit(limit).offset(offset).build().execute();
-                List<MusicChoice> list = new ArrayList<>();
-                for (AlbumSimplified a : result.getItems()) {
-                    String img = firstImageUrl(a.getImages());
-                    Integer year = parseYear(a.getReleaseDate());
-                    List<String> artists = new ArrayList<>();
-                    for (ArtistSimplified as : a.getArtists()) artists.add(as.getName());
-                    list.add(new MusicChoice(MusicType.ALBUM, a.getId(), a.getName(), artists, null, year, img));
-                }
-                return list;
+                return toAlbumChoice(asNonNullList(result.getItems()));
             } catch (IOException | SpotifyWebApiException | org.apache.hc.core5.http.ParseException e) {
                 throw new RuntimeException(e);
             }
@@ -96,17 +81,70 @@ public final class QilletniSpotifyService {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 var result = api().searchPlaylists(q).limit(limit).offset(offset).build().execute();
-                List<MusicChoice> list = new ArrayList<>();
-                for (PlaylistSimplified p : result.getItems()) {
-                    String img = firstImageUrl(p.getImages());
-                    String owner = p.getOwner() != null ? p.getOwner().getDisplayName() : null;
-                    list.add(new MusicChoice(MusicType.COLLECTION, p.getId(), p.getName(), List.of(), owner, null, img));
-                }
-                return list;
+                return toPlaylistChoice(asNonNullList(result.getItems()));
             } catch (IOException | SpotifyWebApiException | org.apache.hc.core5.http.ParseException e) {
                 throw new RuntimeException(e);
             }
         }, EXEC);
+    }
+
+    public CompletableFuture<List<MusicChoice>> searchAny(@NotNull String q, int limit, int offset) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                var result = api().searchItem(q, "track,album,playlist").limit(limit).offset(offset).build().execute();
+                var musicChoices = new ArrayList<MusicChoice>();
+
+                musicChoices.addAll(toSongChoice(asNonNullList(result.getTracks().getItems())));
+                musicChoices.addAll(toAlbumChoice(asNonNullList(result.getAlbums().getItems())));
+                musicChoices.addAll(toPlaylistChoice(asNonNullList(result.getPlaylists().getItems())));
+
+                return musicChoices;
+            } catch (IOException | SpotifyWebApiException | org.apache.hc.core5.http.ParseException e) {
+                throw new RuntimeException(e);
+            }
+        }, EXEC);
+    }
+
+    private static <T> List<T> asNonNullList(T[] array) {
+        List<T> res = new ArrayList<>();
+        for (T item : array) {
+            if (item != null) res.add(item);
+        }
+        return res;
+    }
+
+    private static List<MusicChoice> toSongChoice(@NotNull List<Track> tracks) {
+        List<MusicChoice> list = new ArrayList<>();
+        for (Track t : tracks) {
+            List<String> artists = new ArrayList<>();
+            for (ArtistSimplified a : t.getArtists()) artists.add(a.getName());
+            String img = firstImageUrl(t.getAlbum());
+            Integer year = parseYear(t.getAlbum());
+            list.add(new MusicChoice(MusicType.SONG, t.getId(), t.getName(), artists, null, year, img));
+        }
+        return list;
+    }
+
+    private static List<MusicChoice> toAlbumChoice(@NotNull List<AlbumSimplified> albums) {
+        List<MusicChoice> list = new ArrayList<>();
+        for (AlbumSimplified a : albums) {
+            String img = firstImageUrl(a.getImages());
+            Integer year = parseYear(a.getReleaseDate());
+            List<String> artists = new ArrayList<>();
+            for (ArtistSimplified as : a.getArtists()) artists.add(as.getName());
+            list.add(new MusicChoice(MusicType.ALBUM, a.getId(), a.getName(), artists, null, year, img));
+        }
+        return list;
+    }
+
+    private static List<MusicChoice> toPlaylistChoice(@NotNull List<PlaylistSimplified> playlists) {
+        List<MusicChoice> list = new ArrayList<>();
+        for (PlaylistSimplified p : playlists) {
+            String img = firstImageUrl(p.getImages());
+            String owner = p.getOwner() != null ? p.getOwner().getDisplayName() : null;
+            list.add(new MusicChoice(MusicType.COLLECTION, p.getId(), p.getName(), List.of(), owner, null, img));
+        }
+        return list;
     }
 
     private static String firstImageUrl(@Nullable AlbumSimplified album) {

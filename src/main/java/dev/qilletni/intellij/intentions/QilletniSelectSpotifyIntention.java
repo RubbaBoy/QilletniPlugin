@@ -5,10 +5,11 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import dev.qilletni.intellij.spotify.QilletniSpotifyService;
 import dev.qilletni.intellij.spotify.QilletniSpotifyService.MusicType;
+import dev.qilletni.intellij.spotify.QilletniSpotifyService.MusicTypeContext;
 import dev.qilletni.intellij.ui.SelectSpotifyDialog;
 import dev.qilletni.intellij.util.QilletniMusicPsiUtil;
-import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
 public class QilletniSelectSpotifyIntention implements IntentionAction {
@@ -35,11 +36,11 @@ public class QilletniSelectSpotifyIntention implements IntentionAction {
         var ctxOpt = QilletniMusicPsiUtil.detectContext(element);
         if (ctxOpt.isEmpty()) return;
         var ctx = ctxOpt.get();
-        var dialog = new SelectSpotifyDialog(project, ctx.type);
+        var dialog = new SelectSpotifyDialog(project, ctx.type());
         if (dialog.showAndGet()) {
             dialog.getSelection().ifPresent(choice ->
                 QilletniMusicPsiUtil.applySelection(project, editor, ctx, choice,
-                        ctx.type == MusicType.SONG && dialog.includeKeyword())
+                        ctx.type() == MusicTypeContext.SONG && dialog.includeKeyword())
             );
         }
     }
