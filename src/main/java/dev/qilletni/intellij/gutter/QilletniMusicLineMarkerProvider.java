@@ -5,8 +5,6 @@ import com.intellij.codeInsight.daemon.LineMarkerProvider;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.editor.markup.GutterIconRenderer;
 import com.intellij.psi.PsiElement;
-import dev.qilletni.intellij.spotify.QilletniSpotifyService;
-import dev.qilletni.intellij.spotify.QilletniSpotifyService.MusicType;
 import dev.qilletni.intellij.spotify.QilletniSpotifyService.MusicTypeContext;
 import dev.qilletni.intellij.ui.SelectSpotifyDialog;
 import dev.qilletni.intellij.util.QilletniMusicPsiUtil;
@@ -18,6 +16,11 @@ public class QilletniMusicLineMarkerProvider implements LineMarkerProvider {
     public @Nullable LineMarkerInfo<?> getLineMarkerInfo(@NotNull PsiElement element) {
         // Register markers only on leaf STRING tokens to avoid performance warnings
         if (element.getNode() == null || element.getNode().getFirstChildNode() != null) return null;
+
+        if (!QilletniMusicPsiUtil.isMusicNameLeaf(element) && !QilletniMusicPsiUtil.isStringAssignedToMusicType(element)) {
+            return null;
+        }
+
         var ctxOpt = QilletniMusicPsiUtil.detectContext(element);
         if (ctxOpt.isEmpty()) return null;
         var ctx = ctxOpt.get();

@@ -79,7 +79,7 @@ primary_expr ::= LEFT_PAREN expr RIGHT_PAREN
                | entity_initialize
                | int_expr
                | double_expr
-               | song_expr
+               | song_expr  // These music types differ from ANTLR grammar by not accepting a STRING directly. This is because it causes parsing issues in bnf
                | album_expr
                | collection_expr
                | str_expr
@@ -96,15 +96,14 @@ str_expr ::= STRING | STRING_TYPE LEFT_PAREN expr RIGHT_PAREN
 
 collection_expr ::= collection_url_or_name_pair order_define? weights_define?
                   | COLLECTION_TYPE LEFT_PAREN list_expression RIGHT_PAREN order_define? weights_define?
-                  | STRING
 
 order_define ::= ORDER_PARAM LEFT_SBRACKET COLLECTION_ORDER RIGHT_SBRACKET
 
 weights_define ::= WEIGHTS_KEYWORD LEFT_SBRACKET (ID | function_call) RIGHT_SBRACKET
 
-song_expr ::= song_url_or_name_pair | STRING
+song_expr ::= song_url_or_name_pair
 
-album_expr ::= album_url_or_name_pair | STRING
+album_expr ::= album_url_or_name_pair
 
 song_url_or_name_pair ::= STRING (SONG_TYPE)? BY STRING
 

@@ -27,15 +27,9 @@ public class QilletniSongExprImpl extends QilletniPsiElementBase implements Qill
   }
 
   @Override
-  @Nullable
+  @NotNull
   public QilletniSongUrlOrNamePair getSongUrlOrNamePair() {
-    return findChildByClass(QilletniSongUrlOrNamePair.class);
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getString() {
-    return findChildByType(STRING);
+    return findNotNullChildByClass(QilletniSongUrlOrNamePair.class);
   }
 
 }

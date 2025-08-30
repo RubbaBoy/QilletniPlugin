@@ -79,14 +79,13 @@ public class QilletniParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // album_url_or_name_pair | STRING
+  // album_url_or_name_pair
   public static boolean album_expr(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "album_expr")) return false;
     if (!nextTokenIs(b, STRING)) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = album_url_or_name_pair(b, l + 1);
-    if (!r) r = consumeToken(b, STRING);
     exit_section_(b, m, ALBUM_EXPR, r);
     return r;
   }
@@ -254,7 +253,6 @@ public class QilletniParser implements PsiParser, LightPsiParser {
   /* ********************************************************** */
   // collection_url_or_name_pair order_define? weights_define?
   //                   | COLLECTION_TYPE LEFT_PAREN list_expression RIGHT_PAREN order_define? weights_define?
-  //                   | STRING
   public static boolean collection_expr(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "collection_expr")) return false;
     if (!nextTokenIs(b, "<collection expr>", COLLECTION_TYPE, STRING)) return false;
@@ -262,7 +260,6 @@ public class QilletniParser implements PsiParser, LightPsiParser {
     Marker m = enter_section_(b, l, _NONE_, COLLECTION_EXPR, "<collection expr>");
     r = collection_expr_0(b, l + 1);
     if (!r) r = collection_expr_1(b, l + 1);
-    if (!r) r = consumeToken(b, STRING);
     exit_section_(b, l, m, r, false, null);
     return r;
   }
@@ -1481,7 +1478,7 @@ public class QilletniParser implements PsiParser, LightPsiParser {
   //                | entity_initialize
   //                | int_expr
   //                | double_expr
-  //                | song_expr
+  //                | song_expr  // These music types differ from ANTLR grammar by not accepting a STRING directly. This is because it causes parsing issues in bnf
   //                | album_expr
   //                | collection_expr
   //                | str_expr
@@ -1687,14 +1684,13 @@ public class QilletniParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // song_url_or_name_pair | STRING
+  // song_url_or_name_pair
   public static boolean song_expr(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "song_expr")) return false;
     if (!nextTokenIs(b, STRING)) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = song_url_or_name_pair(b, l + 1);
-    if (!r) r = consumeToken(b, STRING);
     exit_section_(b, m, SONG_EXPR, r);
     return r;
   }

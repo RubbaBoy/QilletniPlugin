@@ -68,10 +68,4 @@ public class QilletniCollectionExprImpl extends QilletniPsiElementBase implement
     return findChildByType(RIGHT_PAREN);
   }
 
-  @Override
-  @Nullable
-  public PsiElement getString() {
-    return findChildByType(STRING);
-  }
-
 }

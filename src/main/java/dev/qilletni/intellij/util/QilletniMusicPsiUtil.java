@@ -6,14 +6,20 @@ import com.intellij.openapi.editor.ScrollType;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.tree.TokenSet;
+import com.intellij.psi.util.PsiTreeUtil;
+import dev.qilletni.intellij.psi.QilletniAlbumUrlOrNamePair;
+import dev.qilletni.intellij.psi.QilletniCollectionUrlOrNamePair;
+import dev.qilletni.intellij.psi.QilletniExpr;
+import dev.qilletni.intellij.psi.QilletniSingleWeight;
+import dev.qilletni.intellij.psi.QilletniSongUrlOrNamePair;
 import dev.qilletni.intellij.psi.QilletniTypes;
+import dev.qilletni.intellij.psi.QilletniVarDeclaration;
 import dev.qilletni.intellij.spotify.QilletniSpotifyService.MusicChoice;
 import dev.qilletni.intellij.spotify.QilletniSpotifyService.MusicType;
 import dev.qilletni.intellij.spotify.QilletniSpotifyService.MusicTypeContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
 import java.util.Optional;
 
 /**
@@ -28,20 +34,93 @@ public final class QilletniMusicPsiUtil {
 
     private QilletniMusicPsiUtil() {}
 
+    public static boolean isMusicNameLeaf(PsiElement element) {
+        var parent = element.getParent();
+        if (parent == null) {
+            return false;
+        }
+
+        if (parent.getFirstChild() != element) return false;
+
+        return parent instanceof QilletniSongUrlOrNamePair ||
+               parent instanceof QilletniAlbumUrlOrNamePair ||
+               parent instanceof QilletniCollectionUrlOrNamePair;
+    }
+
+    public static boolean isStringAssignedToMusicType(PsiElement element) {
+        var parent = element.getParent();
+        if (parent == null) {
+            return false;
+        }
+
+        if (parent.getFirstChild() != element) return false;
+
+        var containingExpr = PsiTreeUtil.findFirstParent(element, p -> p instanceof QilletniExpr);
+        if (containingExpr != null) {
+            var exprParent = containingExpr.getParent();
+            switch (exprParent) {
+                case QilletniVarDeclaration variableDef: {
+                    if (variableDef.getFirstChild() != null && variableDef.getFirstChild().getNode() != null) {
+                        var variableType = variableDef.getFirstChild().getNode().getElementType();
+                        return variableType == QilletniTypes.SONG_TYPE ||
+                                variableType == QilletniTypes.ALBUM_TYPE ||
+                                variableType == QilletniTypes.COLLECTION_TYPE;
+                    }
+                    break;
+                }
+                case QilletniSingleWeight $: return true;
+                default: {}
+            }
+        }
+
+        return false;
+    }
+
     public static Optional<Context> detectContext(@NotNull PsiElement e) {
         PsiElement cur = e;
         while (cur != null && cur.getNode() != null) {
             var type = cur.getNode().getElementType();
 
-            if (type == QilletniTypes.SONG_URL_OR_NAME_PAIR || type == QilletniTypes.SONG_EXPR) {
-                if (type == QilletniTypes.SONG_EXPR) { // It could be just a String
-                    var children = cur.getNode().getChildren(TokenSet.ANY);
-                    if (children.length == 1 && children[0].getElementType() == QilletniTypes.STRING) { // It is JUST a string, so ambiguous
-                        System.out.println("aa children = " + Arrays.toString(children));
-                        return Optional.of(new Context(MusicTypeContext.AMBIGUOUS, cur));
+            var children = cur.getNode().getChildren(TokenSet.ANY);
+            if (children.length == 1 && children[0].getElementType() == QilletniTypes.STRING) { // It is JUST a string, check if it's assigned to a music type
+
+                // This is just a string, so figure out if it's being directly assigned to something
+                var containingExpr = PsiTreeUtil.findFirstParent(children[0].getPsi(), p -> p instanceof QilletniExpr);
+
+                if (containingExpr != null) {
+                    var exprParent = containingExpr.getParent();
+
+                    switch (exprParent) {
+                        case QilletniVarDeclaration variableDef: {
+                            if (variableDef.getFirstChild() != null && variableDef.getFirstChild().getNode() != null) {
+                                var variableType = variableDef.getFirstChild().getNode().getElementType();
+                                if (variableType == QilletniTypes.SONG_TYPE) {
+                                    return Optional.of(new Context(MusicTypeContext.SONG, cur));
+                                } else if (variableType == QilletniTypes.ALBUM_TYPE) {
+                                    return Optional.of(new Context(MusicTypeContext.ALBUM, cur));
+                                } else if (variableType == QilletniTypes.COLLECTION_TYPE) {
+                                    return Optional.of(new Context(MusicTypeContext.COLLECTION, cur));
+                                }
+                            }
+                            break;
+                        }
+                        case QilletniSingleWeight singleWeight: {
+                            if (PsiTreeUtil.findChildOfType(singleWeight, QilletniSongUrlOrNamePair.class) != null) {
+                                return Optional.of(new Context(MusicTypeContext.SONG, cur));
+                            } else if (PsiTreeUtil.findChildOfType(singleWeight, QilletniAlbumUrlOrNamePair.class) != null) {
+                                return Optional.of(new Context(MusicTypeContext.ALBUM, cur));
+                            } else if (PsiTreeUtil.findChildOfType(singleWeight, QilletniCollectionUrlOrNamePair.class) != null) {
+                                return Optional.of(new Context(MusicTypeContext.COLLECTION, cur));
+                            } else {
+                                return Optional.of(new Context(MusicTypeContext.AMBIGUOUS, cur));
+                            }
+                        }
+                        default: {}
                     }
                 }
+            }
 
+            if (type == QilletniTypes.SONG_URL_OR_NAME_PAIR || type == QilletniTypes.SONG_EXPR) {
                 PsiElement target = (type == QilletniTypes.SONG_URL_OR_NAME_PAIR) ? cur : findStringChild(cur, e);
                 if (target != null) {
                     return Optional.of(new Context(MusicTypeContext.SONG, target));
@@ -87,13 +166,18 @@ public final class QilletniMusicPsiUtil {
     public static String buildReplacementText(@NotNull MusicType type, @NotNull MusicChoice choice, boolean includeSongKeyword) {
         String name = escape(choice.name());
         String primaryArtistOrOwner;
+        System.out.println("choice = " + choice);
+        System.out.println("type = " + type);
         if (type == MusicType.COLLECTION) {
             primaryArtistOrOwner = choice.owner() != null ? escape(choice.owner()) : "";
+            System.out.println("111 primaryArtistOrOwner = " + primaryArtistOrOwner);
         } else {
             if (choice.artists() != null && !choice.artists().isEmpty()) {
                 primaryArtistOrOwner = escape(choice.artists().getFirst());
+                System.out.println("222 primaryArtistOrOwner = " + primaryArtistOrOwner);
             } else {
                 primaryArtistOrOwner = "";
+                System.out.println("333 primaryArtistOrOwner = " + primaryArtistOrOwner);
             }
         }
 

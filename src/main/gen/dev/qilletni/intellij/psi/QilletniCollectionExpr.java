@@ -28,7 +28,4 @@ public interface QilletniCollectionExpr extends PsiElement {
   @Nullable
   PsiElement getRightParen();
 
-  @Nullable
-  PsiElement getString();
-
 }

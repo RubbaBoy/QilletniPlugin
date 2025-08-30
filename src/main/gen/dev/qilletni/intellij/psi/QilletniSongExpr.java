@@ -7,10 +7,7 @@ import com.intellij.psi.PsiElement;
 
 public interface QilletniSongExpr extends PsiElement {
 
-  @Nullable
+  @NotNull
   QilletniSongUrlOrNamePair getSongUrlOrNamePair();
-
-  @Nullable
-  PsiElement getString();
 
 }
