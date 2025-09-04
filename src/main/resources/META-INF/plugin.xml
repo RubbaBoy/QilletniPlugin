@@ -19,6 +19,7 @@
     <!-- Product and plugin compatibility requirements.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
     <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.java</depends>
 
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
@@ -37,6 +38,7 @@
 
         <psi.referenceContributor language="Qilletni" implementation="dev.qilletni.intellij.references.QilletniReferenceContributor"/>
         <completion.contributor language="Qilletni" implementationClass="dev.qilletni.intellij.completion.QilletniCompletionContributor"/>
+        <completion.contributor language="Qilletni" implementationClass="dev.qilletni.intellij.completion.QilletniAutoImportCompletionContributor"/>
         <lang.findUsagesProvider language="Qilletni" implementationClass="dev.qilletni.intellij.findusages.QilletniFindUsagesProvider"/>
         <renamePsiElementProcessor implementation="dev.qilletni.intellij.refactoring.QilletniRenameEntityAndConstructorProcessor"/>
 
@@ -56,6 +58,19 @@
         </intentionAction>
         <codeInsight.lineMarkerProvider language="Qilletni" implementationClass="dev.qilletni.intellij.gutter.QilletniMusicLineMarkerProvider"/>
         <applicationConfigurable instance="dev.qilletni.intellij.settings.QilletniSpotifyConfigurable" id="dev.qilletni.intellij.settings.QilletniSpotifyConfigurable" displayName="Qilletni: Spotify" parentId="tools"/>
+        <additionalLibraryRootsProvider implementation="dev.qilletni.intellij.library.QilletniAdditionalLibraryRootsProvider"/>
+        <stubIndex implementation="dev.qilletni.intellij.index.QilletniEntityIndex"/>
+        <stubIndex implementation="dev.qilletni.intellij.index.QilletniFunctionIndex"/>
+        <stubIndex implementation="dev.qilletni.intellij.index.QilletniExtMethodIndex"/>
+        <lang.importOptimizer language="Qilletni" implementationClass="dev.qilletni.intellij.refactoring.QilletniImportOptimizer"/>
+
+        <applicationService serviceImplementation="dev.qilletni.intellij.toolchain.QilletniToolchainSettings"/>
+        <projectService serviceImplementation="dev.qilletni.intellij.toolchain.QilletniToolchainService"/>
+
+        <configurationType implementation="dev.qilletni.intellij.runconfig.QilletniRunConfigurationType"/>
+        <runConfigurationProducer implementation="dev.qilletni.intellij.runconfig.QilletniRunConfigurationProducer"/>
+        <applicationConfigurable instance="dev.qilletni.intellij.toolchain.QilletniToolchainConfigurable" id="dev.qilletni.intellij.settings.QilletniToolchainConfigurable" displayName="Qilletni: Toolchain" parentId="tools"/>
+        <consoleFilterProvider implementation="dev.qilletni.intellij.execution.QilletniConsoleFilterProvider"/>
     </extensions>
 
     <actions>

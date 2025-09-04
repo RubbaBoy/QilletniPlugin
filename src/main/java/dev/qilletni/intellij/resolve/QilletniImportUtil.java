@@ -20,6 +20,12 @@ import java.util.*;
 final class QilletniImportUtil {
     private QilletniImportUtil() {}
 
+    // Resolver chain for library-style imports (e.g., "libName:path/in/lib.ql").
+    private static final List<QilletniLibraryPathResolver> LIB_RESOLVERS = List.of(
+            new dev.qilletni.intellij.resolve.impl.NoopLibraryPathResolver(),
+            new dev.qilletni.intellij.resolve.impl.LibraryRootsPathResolver()
+    );
+
     static List<VirtualFile> getFilesForQualifier(QilletniFile contextFile, String qualifier) {
         Map<String, List<VirtualFile>> byAlias = collectAliasedImports(contextFile);
         return new ArrayList<>(byAlias.getOrDefault(qualifier, Collections.emptyList()));
@@ -50,9 +56,16 @@ final class QilletniImportUtil {
             String alias = findAlias(imp);
             if (alias == null) continue; // this method only collects aliased imports
 
-            var vf = resolveProjectLocalFile(project, raw);
-            if (vf != null) {
-                res.computeIfAbsent(alias, k -> new ArrayList<>()).add(vf);
+            if (isLibraryPath(raw)) {
+                List<VirtualFile> files = resolveLibraryFiles(project, raw);
+                if (!files.isEmpty()) {
+                    res.computeIfAbsent(alias, k -> new ArrayList<>()).addAll(files);
+                }
+            } else {
+                var vf = resolveProjectLocalFile(project, raw);
+                if (vf != null) {
+                    res.computeIfAbsent(alias, k -> new ArrayList<>()).add(vf);
+                }
             }
         }
         return res;
@@ -66,8 +79,12 @@ final class QilletniImportUtil {
             if (raw == null) continue;
             String alias = findAlias(imp);
             if (alias != null) continue; // skip aliased; this method collects only unaliased
-            var vf = resolveProjectLocalFile(project, raw);
-            if (vf != null) res.add(vf);
+            if (isLibraryPath(raw)) {
+                res.addAll(resolveLibraryFiles(project, raw));
+            } else {
+                var vf = resolveProjectLocalFile(project, raw);
+                if (vf != null) res.add(vf);
+            }
         }
         return res;
     }
@@ -97,12 +114,28 @@ final class QilletniImportUtil {
         return null;
     }
 
-    private static VirtualFile resolveProjectLocalFile(Project project, String importPathLiteral) {
-        // Skip library imports ("libName:...") for now (external dependencies not yet supported)
-        int colon = importPathLiteral.indexOf(':');
-        if (colon > 0) {
-            return null;
+    private static boolean isLibraryPath(String raw) {
+        int colon = raw.indexOf(':');
+        return colon > 0; // "name:path"
+    }
+
+    private static List<VirtualFile> resolveLibraryFiles(Project project, String raw) {
+        if (project == null || raw == null) return List.of();
+        for (var resolver : LIB_RESOLVERS) {
+            try {
+                if (resolver != null && resolver.supports(raw)) {
+                    List<VirtualFile> files = resolver.resolve(project, raw);
+                    return files != null ? files : List.of();
+                }
+            } catch (Throwable ignored) {
+                // defensive: never let a resolver break import collection
+            }
         }
+        return List.of();
+    }
+
+    private static VirtualFile resolveProjectLocalFile(Project project, String importPathLiteral) {
+        if (isLibraryPath(importPathLiteral)) return null; // library paths handled elsewhere
         String basePath = project.getBasePath();
         if (basePath == null) return null;
         File ioFile = new File(basePath, importPathLiteral);

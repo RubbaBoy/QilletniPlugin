@@ -6,12 +6,17 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
+import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.stubs.StubIndex;
 import com.intellij.psi.util.CachedValue;
 import com.intellij.psi.util.CachedValueProvider;
 import com.intellij.psi.util.CachedValuesManager;
 import com.intellij.psi.util.PsiModificationTracker;
 import com.intellij.psi.util.PsiTreeUtil;
 import dev.qilletni.intellij.QilletniFile;
+import dev.qilletni.intellij.index.QilletniEntityIndex;
+import dev.qilletni.intellij.index.QilletniExtMethodIndex;
+import dev.qilletni.intellij.index.QilletniFunctionIndex;
 import dev.qilletni.intellij.psi.*;
 import org.jetbrains.annotations.Nullable;
 
@@ -49,18 +54,28 @@ public final class QilletniIndexFacade {
 
         var tn = parseTypeName(rawTypeName);
         List<VirtualFile> files = candidateFilesForType(contextFile, tn);
+        // Try stub index first
+        if (!files.isEmpty()) {
+            GlobalSearchScope scope = GlobalSearchScope.filesScope(project, new java.util.HashSet<>(files));
+            var iter = StubIndex.getElements(QilletniEntityIndex.KEY, tn.simple, project, scope, QilletniEntityDef.class).iterator();
+            if (iter.hasNext()) {
+                var found = iter.next();
+                if (found != null && found.isValid()) {
+                    cache.put(rawTypeName, found);
+                    return found;
+                }
+            }
+        }
+        // Fallback PSI scan in specified files
         for (VirtualFile vf : files) {
             var psi = vf != null ? PsiManager.getInstance(project).findFile(vf) : null;
             if (!(psi instanceof QilletniFile)) continue;
             QilletniEntityDef e = getQilletniEntityDef(rawTypeName, cache, tn, psi);
             if (e != null) return e;
         }
-
-        // Also consider the context file if not included (e.g., no physical VFS)
         if (contextFile.getVirtualFile() == null && tn.qualifier == null) {
             return getQilletniEntityDef(rawTypeName, cache, tn, contextFile);
         }
-        // Negative result caching is optional; skip to avoid stale misses.
         return null;
     }
 
@@ -77,7 +92,7 @@ public final class QilletniIndexFacade {
     }
 
     public static List<QilletniFunctionDef> findExtensionMethods(Project project, QilletniFile contextFile, String rawReceiverType, String methodName) {
-        List<QilletniFunctionDef> empty = new ArrayList<>();
+        List<QilletniFunctionDef> empty = List.of();
         if (project == null || contextFile == null || rawReceiverType == null || methodName == null) return empty;
 
         Map<String, List<QilletniFunctionDef>> cache = getOrCreateExtMethodsCache(project, contextFile);
@@ -87,45 +102,57 @@ public final class QilletniIndexFacade {
             // Filter out invalid PSI just in case
             List<QilletniFunctionDef> valid = new ArrayList<>();
             for (var f : cached) if (f != null && f.isValid()) valid.add(f);
-            if (!valid.isEmpty()) return valid;
+            if (!valid.isEmpty()) return List.copyOf(valid);
         }
 
         var tn = parseTypeName(rawReceiverType);
         List<VirtualFile> files = candidateFilesForType(contextFile, tn);
-        Set<String> seen = new HashSet<>();
+        // Try stub index first
         List<QilletniFunctionDef> result = new ArrayList<>();
-        for (VirtualFile vf : files) {
-            var psi = vf != null ? PsiManager.getInstance(project).findFile(vf) : null;
-            if (!(psi instanceof QilletniFile)) continue;
-            for (var def : PsiTreeUtil.findChildrenOfType(psi, QilletniFunctionDef.class)) {
-                var onType = PsiTreeUtil.findChildOfType(def, QilletniFunctionOnType.class);
-                if (onType == null) return null;
-                PsiElement id = PsiTreeUtil.findChildOfType(onType, PsiElement.class);
-                if (id == null || id.getNode() == null || id.getNode().getElementType() != QilletniTypes.ID)
-                    return null;
-                if (!id.getText().contentEquals(tn.simple)) return null;
-                var fName = PsiTreeUtil.findChildOfType(def, QilletniFunctionName.class);
-                if (fName == null || !fName.getText().contentEquals(methodName)) return null;
-                String key = (vf != null ? vf.getPath() : "CTX") + ":" + fName.getText() + ":" + tn.simple;
-                if (seen.add(key)) result.add(def);
+        if (!files.isEmpty()) {
+            var scope = GlobalSearchScope.filesScope(project, new java.util.HashSet<>(files));
+            String key = dev.qilletni.intellij.index.QilletniIndexConstants.extMethodKey(tn.simple, methodName);
+            if (!key.isBlank()) {
+                var col = StubIndex.getElements(QilletniExtMethodIndex.KEY, key, project, scope, QilletniFunctionDef.class);
+                for (var def : col) if (def != null && def.isValid()) result.add(def);
             }
         }
-        // Consider contextFile without VFS
-        if (contextFile.getVirtualFile() == null) {
-            for (var def : PsiTreeUtil.findChildrenOfType(contextFile, QilletniFunctionDef.class)) {
-                var onType = PsiTreeUtil.findChildOfType(def, QilletniFunctionOnType.class);
-                if (onType == null) continue;
-                PsiElement id = PsiTreeUtil.findChildOfType(onType, PsiElement.class);
-                if (id == null || id.getNode() == null || id.getNode().getElementType() != QilletniTypes.ID) continue;
-                if (!id.getText().contentEquals(tn.simple)) continue;
-                var fName = PsiTreeUtil.findChildOfType(def, QilletniFunctionName.class);
-                if (fName == null || !fName.getText().contentEquals(methodName)) continue;
-                String key = "CTX:" + fName.getText() + ":" + tn.simple;
-                if (seen.add(key)) result.add(def);
+        // Fallback PSI scan if index didn’t yield any
+        if (result.isEmpty()) {
+            Set<String> seen = new HashSet<>();
+            for (VirtualFile vf : files) {
+                var psi = vf != null ? PsiManager.getInstance(project).findFile(vf) : null;
+                if (!(psi instanceof QilletniFile)) continue;
+                for (var def : PsiTreeUtil.findChildrenOfType(psi, QilletniFunctionDef.class)) {
+                    var onType = PsiTreeUtil.findChildOfType(def, QilletniFunctionOnType.class);
+                    if (onType == null) continue;
+                    PsiElement id = PsiTreeUtil.findChildOfType(onType, PsiElement.class);
+                    if (id == null || id.getNode() == null || id.getNode().getElementType() != QilletniTypes.ID) continue;
+                    if (!id.getText().contentEquals(tn.simple)) continue;
+                    var fName = PsiTreeUtil.findChildOfType(def, QilletniFunctionName.class);
+                    if (fName == null || !fName.getText().contentEquals(methodName)) continue;
+                    if (!def.isValid()) continue;
+                    String sk = (vf != null ? vf.getPath() : "CTX") + ":" + fName.getText() + ":" + tn.simple;
+                    if (seen.add(sk)) result.add(def);
+                }
+            }
+            if (contextFile.getVirtualFile() == null) {
+                for (var def : PsiTreeUtil.findChildrenOfType(contextFile, QilletniFunctionDef.class)) {
+                    var onType = PsiTreeUtil.findChildOfType(def, QilletniFunctionOnType.class);
+                    if (onType == null) continue;
+                    PsiElement id = PsiTreeUtil.findChildOfType(onType, PsiElement.class);
+                    if (id == null || id.getNode() == null || id.getNode().getElementType() != QilletniTypes.ID) continue;
+                    if (!id.getText().contentEquals(tn.simple)) continue;
+                    var fName = PsiTreeUtil.findChildOfType(def, QilletniFunctionName.class);
+                    if (fName == null || !fName.getText().contentEquals(methodName)) continue;
+                    String sk = "CTX:" + fName.getText() + ":" + tn.simple;
+                    if (seen.add(sk)) result.add(def);
+                }
             }
         }
-        cache.put(k, result);
-        return result;
+        List<QilletniFunctionDef> immutable = List.copyOf(result);
+        cache.put(k, immutable);
+        return immutable;
     }
 
     // List all entities visible from the given file (current file + project-local imports and alias imports)
@@ -146,7 +173,7 @@ public final class QilletniIndexFacade {
             if (contextFile.getVirtualFile() == null) {
                 list.addAll(PsiTreeUtil.findChildrenOfType(contextFile, QilletniEntityDef.class));
             }
-            return CachedValueProvider.Result.create(list, PsiModificationTracker.MODIFICATION_COUNT);
+            return CachedValueProvider.Result.create(List.copyOf(list), PsiModificationTracker.MODIFICATION_COUNT);
         }, false);
     }
 
@@ -158,6 +185,10 @@ public final class QilletniIndexFacade {
 
         return CachedValuesManager.getManager(project).getCachedValue(contextFile, TOP_LEVEL_FUNCS_CACHE_KEY, () -> {
             List<QilletniFunctionDef> list = new ArrayList<>();
+            if (!files.isEmpty()) {
+                var scope = GlobalSearchScope.filesScope(project, new java.util.HashSet<>(files));
+                // We don’t know names here; get all by iterating over all keys is not possible; instead, fallback to PSI per-file.
+            }
             for (VirtualFile vf : files) {
                 var psi = vf != null ? PsiManager.getInstance(project).findFile(vf) : null;
                 if (!(psi instanceof QilletniFile)) continue;
@@ -166,7 +197,7 @@ public final class QilletniIndexFacade {
             if (contextFile.getVirtualFile() == null) {
                 collectTopLevelFunctionDefs(list, contextFile);
             }
-            return CachedValueProvider.Result.create(list, PsiModificationTracker.MODIFICATION_COUNT);
+            return CachedValueProvider.Result.create(List.copyOf(list), PsiModificationTracker.MODIFICATION_COUNT);
         }, false);
     }
 
@@ -202,8 +233,12 @@ public final class QilletniIndexFacade {
         if (contextFile.getVirtualFile() == null) {
             collectExtensionMethodDefs(tn, list, contextFile);
         }
-        cache.put(rawReceiverType, list);
-        return list;
+        // filter invalid PSI defensively
+        List<QilletniFunctionDef> valid = new ArrayList<>();
+        for (var f : list) if (f != null && f.isValid()) valid.add(f);
+        List<QilletniFunctionDef> immutable = List.copyOf(valid);
+        cache.put(rawReceiverType, immutable);
+        return immutable;
     }
 
     private static void collectExtensionMethodDefs(TypeName tn, List<QilletniFunctionDef> list, PsiFile psi) {
