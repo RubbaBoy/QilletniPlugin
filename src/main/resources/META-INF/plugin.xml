@@ -68,6 +68,7 @@
         <projectService serviceImplementation="dev.qilletni.intellij.toolchain.QilletniToolchainService"/>
 
         <configurationType implementation="dev.qilletni.intellij.runconfig.QilletniRunConfigurationType"/>
+        <configurationType implementation="dev.qilletni.intellij.runconfig.QilletniBuildRunConfigurationType"/>
         <runConfigurationProducer implementation="dev.qilletni.intellij.runconfig.QilletniRunConfigurationProducer"/>
         <applicationConfigurable instance="dev.qilletni.intellij.toolchain.QilletniToolchainConfigurable" id="dev.qilletni.intellij.settings.QilletniToolchainConfigurable" displayName="Qilletni: Toolchain" parentId="tools"/>
         <consoleFilterProvider implementation="dev.qilletni.intellij.execution.QilletniConsoleFilterProvider"/>
