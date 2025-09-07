@@ -136,8 +136,9 @@ public final class QilletniCompletionContributor extends CompletionContributor {
             for (var e : entities) {
                 var nameEl = PsiTreeUtil.findChildOfType(e, QilletniEntityName.class);
                 if (nameEl == null) continue;
-                    result.addElement(LookupElementBuilder.create(e, nameEl.getText())
-                        .withIcon(AllIcons.Nodes.Class));
+                result.addElement(LookupElementBuilder.create(e, nameEl.getText())
+                        .withIcon(AllIcons.Nodes.Class)
+                        .withInsertHandler(ENTITY_CTOR_PARENS_INSERT_HANDLER));
             }
         }
     }
@@ -532,6 +533,22 @@ public final class QilletniCompletionContributor extends CompletionContributor {
         return false;
     }
 
+    // Look back for a NEW token, skipping whitespace and comments
+    private static boolean hasPrecedingNew(PsiElement leaf) {
+        if (leaf == null) return false;
+        PsiElement prev = com.intellij.psi.util.PsiTreeUtil.prevLeaf(leaf, true);
+        while (prev != null) {
+            if (prev.getNode() == null) return false;
+            var t = prev.getNode().getElementType();
+            if (t == TokenType.WHITE_SPACE || t == QilletniTypes.LINE_COMMENT || t == QilletniTypes.BLOCK_COMMENT || t == QilletniTypes.DOC_COMMENT) {
+                prev = com.intellij.psi.util.PsiTreeUtil.prevLeaf(prev, true);
+                continue;
+            }
+            return t == QilletniTypes.NEW;
+        }
+        return false;
+    }
+
     // Infer a receiver type for completion: try static inference, then var-declaration lookup.
     private static String inferReceiverTypeForCompletion(QilletniFile file, PsiElement primary) {
         if (primary == null) return null;
@@ -606,5 +623,33 @@ public final class QilletniCompletionContributor extends CompletionContributor {
         // Otherwise insert "()" at the original tail position and move caret inside the parentheses
         doc.insertString(tail, "()");
         context.getEditor().getCaretModel().moveToOffset(tail + 1);
+    };
+
+    // Insert handler for entity constructor names: add parentheses when after `new` or already parsed as entity_initialize
+    private static final InsertHandler<LookupElement> ENTITY_CTOR_PARENS_INSERT_HANDLER = (context, item) -> {
+        var editor = context.getEditor();
+        var file = context.getFile();
+        var doc = context.getDocument();
+        int tail = context.getTailOffset();
+
+        // Determine context robustly: either already inside a parsed entity_initialize or directly after NEW token
+        var caretEl = file.findElementAt(Math.max(0, editor.getCaretModel().getOffset()));
+        var beforeTailEl = file.findElementAt(Math.max(0, tail - 1));
+        boolean parsedCtor = PsiTreeUtil.getParentOfType(caretEl, QilletniEntityInitialize.class) != null
+                || PsiTreeUtil.getParentOfType(beforeTailEl, QilletniEntityInitialize.class) != null;
+        boolean afterNew = hasPrecedingNew(caretEl != null ? caretEl : beforeTailEl);
+        if (!parsedCtor && !afterNew) return; // Only act in constructor-like context
+
+        CharSequence seq = doc.getCharsSequence();
+        int offset = tail;
+        while (offset < seq.length() && Character.isWhitespace(seq.charAt(offset))) {
+            offset++;
+        }
+        if (offset < seq.length() && seq.charAt(offset) == '(') {
+            editor.getCaretModel().moveToOffset(offset + 1);
+            return;
+        }
+        doc.insertString(tail, "()");
+        editor.getCaretModel().moveToOffset(tail + 1);
     };
 }

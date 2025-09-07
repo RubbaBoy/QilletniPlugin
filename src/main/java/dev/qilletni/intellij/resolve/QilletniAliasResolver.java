@@ -34,6 +34,7 @@ public final class QilletniAliasResolver {
     }
 
     public static List<VirtualFile> getFilesForQualifier(QilletniFile contextFile, String qualifier) {
+        // Alias-qualified names are re-exported transitively.
         AliasData data = getData(contextFile);
         return List.copyOf(data.aliasToFiles.getOrDefault(qualifier, List.of()));
     }
@@ -50,13 +51,19 @@ public final class QilletniAliasResolver {
 
     private static AliasData getData(QilletniFile contextFile) {
         return CachedValuesManager.getCachedValue(contextFile, KEY, () -> {
-            Map<String, List<VirtualFile>> aliased = QilletniImportUtil.collectAliasedImports(contextFile);
-            // ensure lists are mutable internally
-            aliased.replaceAll((k, v) -> v == null ? new ArrayList<>() : new ArrayList<>(v));
-            LinkedHashSet<VirtualFile> projectLocal = new LinkedHashSet<>(QilletniImportUtil.getProjectLocalImports(contextFile));
-            // Merge aliased imports into project-local imports set as well
-            for (List<VirtualFile> vfs : aliased.values()) projectLocal.addAll(vfs);
-            LinkedHashSet<VirtualFile> all = new LinkedHashSet<>(projectLocal);
+            // Build transitive alias maps: each alias expands to its transitive closure.
+            Map<String, List<VirtualFile>> directAliased = QilletniImportUtil.collectAliasedImports(contextFile);
+            Map<String, List<VirtualFile>> aliased = new LinkedHashMap<>();
+            for (var entry : directAliased.entrySet()) {
+                String alias = entry.getKey();
+                // Re-export alias-qualified names transitively (recursive). Project-local scope applied.
+                List<VirtualFile> files = QilletniImportUtil.getTransitiveFilesForQualifier(contextFile, alias);
+                aliased.put(alias, new ArrayList<>(files));
+            }
+            // Transitive project-local imports (unaliased + aliased contents) form the ambient scope.
+            LinkedHashSet<VirtualFile> projectLocal = new LinkedHashSet<>(QilletniImportUtil.getTransitiveProjectLocalImports(contextFile));
+            // All imports (project-local + libraries) transitively; kept for completeness/possible future use.
+            LinkedHashSet<VirtualFile> all = new LinkedHashSet<>(QilletniImportUtil.getTransitiveAllImportedFiles(contextFile));
             AliasData value = new AliasData(aliased, new ArrayList<>(projectLocal), new ArrayList<>(all));
             return CachedValueProvider.Result.create(value, PsiModificationTracker.MODIFICATION_COUNT, ROOTS_TRACKER);
         });

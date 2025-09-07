@@ -24,6 +24,80 @@ import java.util.*;
 final class QilletniImportUtil {
     private QilletniImportUtil() {}
 
+    /**
+     * Computes the transitive closure of project-local imports starting from the given file.
+     * Alias-qualified names are re-exported: files imported by imported files contribute to the same visibility.
+     * This traversal is recursive and guarded against cycles. Library imports will also be traversed once
+     * corresponding resolvers resolve them to VirtualFiles.
+     */
+    static List<VirtualFile> getTransitiveProjectLocalImports(QilletniFile contextFile) {
+        return traverseTransitive(contextFile, /*projectLocalOnly*/ true, /*qualifierFilter*/ null);
+    }
+
+    /**
+     * Computes the transitive closure of all imported files (aliased and unaliased, including libraries if resolved).
+     * Alias-qualified names are re-exported transitively.
+     */
+    static List<VirtualFile> getTransitiveAllImportedFiles(QilletniFile contextFile) {
+        return traverseTransitive(contextFile, /*projectLocalOnly*/ false, /*qualifierFilter*/ null);
+    }
+
+    /**
+     * Returns transitive files reachable under the given alias qualifier. This re-exports alias-qualified names
+     * through nested imports (recursive), per language decision. Project-local filtering is applied so completions
+     * and resolution respect source roots boundaries.
+     */
+    static List<VirtualFile> getTransitiveFilesForQualifier(QilletniFile contextFile, String qualifier) {
+        return traverseTransitive(contextFile, /*projectLocalOnly*/ true, qualifier);
+    }
+
+    private static List<VirtualFile> traverseTransitive(QilletniFile startFile, boolean projectLocalOnly, String qualifierFilter) {
+        if (startFile == null) return List.of();
+        // Seed frontier depending on qualifier filter
+        Map<String, List<VirtualFile>> directAliased = collectAliasedImports(startFile);
+        List<VirtualFile> directUnaliased = collectUnaliasedImports(startFile);
+        Deque<VirtualFile> frontier = new ArrayDeque<>();
+        LinkedHashSet<VirtualFile> visited = new LinkedHashSet<>();
+
+        if (qualifierFilter != null) {
+            frontier.addAll(directAliased.getOrDefault(qualifierFilter, List.of()));
+        } else {
+            for (var v : directUnaliased) frontier.add(v);
+            for (var list : directAliased.values()) frontier.addAll(list);
+        }
+
+        while (!frontier.isEmpty()) {
+            var vf = frontier.removeFirst();
+            if (vf == null || !visited.add(vf)) continue;
+            // Load PSI to read its direct imports
+            var psi = com.intellij.psi.PsiManager.getInstance(startFile.getProject()).findFile(vf);
+            if (!(psi instanceof QilletniFile)) continue;
+            var qf = (QilletniFile) psi;
+            // Collect that file's direct imports
+            Map<String, List<VirtualFile>> childAliased = collectAliasedImports(qf);
+            List<VirtualFile> childUnaliased = collectUnaliasedImports(qf);
+            // Apply project-local filter if requested
+            List<VirtualFile> next = new ArrayList<>();
+            if (qualifierFilter != null) {
+                next.addAll(childAliased.getOrDefault(qualifierFilter, List.of()));
+            } else {
+                next.addAll(childUnaliased);
+                for (var list : childAliased.values()) next.addAll(list);
+            }
+            if (projectLocalOnly) {
+                next = filterToQilletniSrc(startFile, next);
+            }
+            for (var n : next) if (n != null && !visited.contains(n)) frontier.addLast(n);
+        }
+
+        List<VirtualFile> result = new ArrayList<>(visited);
+        if (projectLocalOnly) {
+            // Ensure all results adhere to project-local constraints (seed may have included library files)
+            result = new ArrayList<>(filterToQilletniSrc(startFile, result));
+        }
+        return result;
+    }
+
     // Resolver chain for library-style imports (e.g., "libName:path/in/lib.ql").
     private static final List<QilletniLibraryPathResolver> LIB_RESOLVERS = List.of(
             new dev.qilletni.intellij.resolve.impl.NoopLibraryPathResolver(),
@@ -31,6 +105,7 @@ final class QilletniImportUtil {
     );
 
     static List<VirtualFile> getFilesForQualifier(QilletniFile contextFile, String qualifier) {
+        // Preserve existing API: return direct alias files (non-transitive). Not used by callers after resolver change.
         Map<String, List<VirtualFile>> byAlias = collectAliasedImports(contextFile);
         return new ArrayList<>(byAlias.getOrDefault(qualifier, Collections.emptyList()));
     }
@@ -69,7 +144,7 @@ final class QilletniImportUtil {
                     res.computeIfAbsent(alias, k -> new ArrayList<>()).addAll(files);
                 }
             } else {
-                var vf = resolveProjectLocalFile(project, raw);
+                var vf = resolveProjectLocalFile(file, raw);
                 if (vf != null) {
                     res.computeIfAbsent(alias, k -> new ArrayList<>()).add(vf);
                 }
@@ -89,7 +164,7 @@ final class QilletniImportUtil {
             if (isLibraryPath(raw)) {
                 res.addAll(resolveLibraryFiles(project, raw));
             } else {
-                var vf = resolveProjectLocalFile(project, raw);
+                var vf = resolveProjectLocalFile(file, raw);
                 if (vf != null) res.add(vf);
             }
         }
@@ -141,12 +216,27 @@ final class QilletniImportUtil {
         return List.of();
     }
 
-    private static VirtualFile resolveProjectLocalFile(Project project, String importPathLiteral) {
+    private static VirtualFile resolveProjectLocalFile(QilletniFile baseFile, String importPathLiteral) {
+        // Resolve project-local file paths relative to the importing file's directory.
+        // Supports ./ and ../ segments naturally via VirtualFile.findFileByRelativePath.
+        // Fallback: project base path to maintain backwards compatibility for root-based imports.
         if (isLibraryPath(importPathLiteral)) return null; // library paths handled elsewhere
-        String basePath = project.getBasePath();
-        if (basePath == null) return null;
-        File ioFile = new File(basePath, importPathLiteral);
-        return LocalFileSystem.getInstance().findFileByIoFile(ioFile);
+        if (baseFile != null) {
+            var vf = baseFile.getVirtualFile();
+            var baseDir = vf != null ? vf.getParent() : null;
+            if (baseDir != null) {
+                var rel = baseDir.findFileByRelativePath(importPathLiteral);
+                if (rel != null) return rel;
+            }
+            var project = baseFile.getProject();
+            String basePath = project != null ? project.getBasePath() : null;
+            if (basePath != null) {
+                File ioFile = new File(basePath, importPathLiteral);
+                return LocalFileSystem.getInstance().findFileByIoFile(ioFile);
+            }
+            return null;
+        }
+        return null;
     }
 
     private static List<VirtualFile> filterToQilletniSrc(QilletniFile contextFile, List<VirtualFile> files) {
