@@ -29,13 +29,13 @@ public class QilletniEntityPropertyDeclarationImpl extends QilletniPsiElementBas
   @Override
   @Nullable
   public QilletniExpr getExpr() {
-    return findChildByClass(QilletniExpr.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniExpr.class);
   }
 
   @Override
   @NotNull
   public QilletniPropertyName getPropertyName() {
-    return findNotNullChildByClass(QilletniPropertyName.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, QilletniPropertyName.class));
   }
 
   @Override

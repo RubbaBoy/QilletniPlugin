@@ -29,31 +29,31 @@ public class QilletniAsmtBaseImpl extends QilletniPsiElementBase implements Qill
   @Override
   @Nullable
   public QilletniExpr getExpr() {
-    return findChildByClass(QilletniExpr.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniExpr.class);
   }
 
   @Override
   @Nullable
   public QilletniIntExpr getIntExpr() {
-    return findChildByClass(QilletniIntExpr.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniIntExpr.class);
   }
 
   @Override
   @Nullable
   public QilletniLhsCore getLhsCore() {
-    return findChildByClass(QilletniLhsCore.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniLhsCore.class);
   }
 
   @Override
   @Nullable
   public QilletniLhsMember getLhsMember() {
-    return findChildByClass(QilletniLhsMember.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniLhsMember.class);
   }
 
   @Override
   @Nullable
   public QilletniVarDeclaration getVarDeclaration() {
-    return findChildByClass(QilletniVarDeclaration.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniVarDeclaration.class);
   }
 
   @Override

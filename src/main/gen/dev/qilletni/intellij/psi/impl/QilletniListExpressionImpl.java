@@ -29,7 +29,7 @@ public class QilletniListExpressionImpl extends QilletniPsiElementBase implement
   @Override
   @Nullable
   public QilletniExprList getExprList() {
-    return findChildByClass(QilletniExprList.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniExprList.class);
   }
 
   @Override
@@ -83,13 +83,13 @@ public class QilletniListExpressionImpl extends QilletniPsiElementBase implement
   @Override
   @NotNull
   public PsiElement getLeftSbracket() {
-    return findNotNullChildByType(LEFT_SBRACKET);
+    return notNullChild(findChildByType(LEFT_SBRACKET));
   }
 
   @Override
   @NotNull
   public PsiElement getRightSbracket() {
-    return findNotNullChildByType(RIGHT_SBRACKET);
+    return notNullChild(findChildByType(RIGHT_SBRACKET));
   }
 
   @Override

@@ -29,13 +29,13 @@ public class QilletniCollectionUrlOrNamePairImpl extends QilletniPsiElementBase 
   @Override
   @NotNull
   public PsiElement getBy() {
-    return findNotNullChildByType(BY);
+    return notNullChild(findChildByType(BY));
   }
 
   @Override
   @NotNull
   public PsiElement getCollectionType() {
-    return findNotNullChildByType(COLLECTION_TYPE);
+    return notNullChild(findChildByType(COLLECTION_TYPE));
   }
 
 }

@@ -29,79 +29,79 @@ public class QilletniPrimaryExprImpl extends QilletniPsiElementBase implements Q
   @Override
   @Nullable
   public QilletniAlbumExpr getAlbumExpr() {
-    return findChildByClass(QilletniAlbumExpr.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniAlbumExpr.class);
   }
 
   @Override
   @Nullable
   public QilletniCollectionExpr getCollectionExpr() {
-    return findChildByClass(QilletniCollectionExpr.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniCollectionExpr.class);
   }
 
   @Override
   @Nullable
   public QilletniDoubleExpr getDoubleExpr() {
-    return findChildByClass(QilletniDoubleExpr.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniDoubleExpr.class);
   }
 
   @Override
   @Nullable
   public QilletniEntityInitialize getEntityInitialize() {
-    return findChildByClass(QilletniEntityInitialize.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniEntityInitialize.class);
   }
 
   @Override
   @Nullable
   public QilletniExpr getExpr() {
-    return findChildByClass(QilletniExpr.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniExpr.class);
   }
 
   @Override
   @Nullable
   public QilletniFunctionCall getFunctionCall() {
-    return findChildByClass(QilletniFunctionCall.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniFunctionCall.class);
   }
 
   @Override
   @Nullable
   public QilletniIntExpr getIntExpr() {
-    return findChildByClass(QilletniIntExpr.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniIntExpr.class);
   }
 
   @Override
   @Nullable
   public QilletniIsExpr getIsExpr() {
-    return findChildByClass(QilletniIsExpr.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniIsExpr.class);
   }
 
   @Override
   @Nullable
   public QilletniJavaExpr getJavaExpr() {
-    return findChildByClass(QilletniJavaExpr.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniJavaExpr.class);
   }
 
   @Override
   @Nullable
   public QilletniListExpression getListExpression() {
-    return findChildByClass(QilletniListExpression.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniListExpression.class);
   }
 
   @Override
   @Nullable
   public QilletniSongExpr getSongExpr() {
-    return findChildByClass(QilletniSongExpr.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniSongExpr.class);
   }
 
   @Override
   @Nullable
   public QilletniStrExpr getStrExpr() {
-    return findChildByClass(QilletniStrExpr.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniStrExpr.class);
   }
 
   @Override
   @Nullable
   public QilletniWeightsExpr getWeightsExpr() {
-    return findChildByClass(QilletniWeightsExpr.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniWeightsExpr.class);
   }
 
   @Override

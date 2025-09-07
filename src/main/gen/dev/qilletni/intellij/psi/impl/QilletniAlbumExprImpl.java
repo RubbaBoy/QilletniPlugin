@@ -29,7 +29,7 @@ public class QilletniAlbumExprImpl extends QilletniPsiElementBase implements Qil
   @Override
   @NotNull
   public QilletniAlbumUrlOrNamePair getAlbumUrlOrNamePair() {
-    return findNotNullChildByClass(QilletniAlbumUrlOrNamePair.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, QilletniAlbumUrlOrNamePair.class));
   }
 
 }

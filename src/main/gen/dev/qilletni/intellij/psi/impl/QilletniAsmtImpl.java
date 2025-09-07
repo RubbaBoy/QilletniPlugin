@@ -29,7 +29,7 @@ public class QilletniAsmtImpl extends QilletniPsiElementBase implements Qilletni
   @Override
   @NotNull
   public QilletniAsmtBase getAsmtBase() {
-    return findNotNullChildByClass(QilletniAsmtBase.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, QilletniAsmtBase.class));
   }
 
   @Override

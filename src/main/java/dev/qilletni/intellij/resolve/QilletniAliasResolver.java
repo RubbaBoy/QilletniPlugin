@@ -6,6 +6,7 @@ import com.intellij.psi.util.CachedValue;
 import com.intellij.psi.util.CachedValueProvider;
 import com.intellij.psi.util.CachedValuesManager;
 import com.intellij.psi.util.PsiModificationTracker;
+import com.intellij.openapi.roots.ProjectRootManager;
 import dev.qilletni.intellij.QilletniFile;
 
 import java.util.*;
@@ -17,6 +18,10 @@ import java.util.*;
  */
 public final class QilletniAliasResolver {
     private QilletniAliasResolver() {}
+
+    private static final com.intellij.openapi.util.SimpleModificationTracker ROOTS_TRACKER = new com.intellij.openapi.util.SimpleModificationTracker();
+    public static void onRootsChanged() { ROOTS_TRACKER.incModificationCount(); }
+    public static com.intellij.openapi.util.ModificationTracker rootsTracker() { return ROOTS_TRACKER; }
 
     private static final Key<CachedValue<AliasData>> KEY = Key.create("qilletni.alias.data");
 
@@ -53,7 +58,7 @@ public final class QilletniAliasResolver {
             for (List<VirtualFile> vfs : aliased.values()) projectLocal.addAll(vfs);
             LinkedHashSet<VirtualFile> all = new LinkedHashSet<>(projectLocal);
             AliasData value = new AliasData(aliased, new ArrayList<>(projectLocal), new ArrayList<>(all));
-            return CachedValueProvider.Result.create(value, PsiModificationTracker.MODIFICATION_COUNT);
+            return CachedValueProvider.Result.create(value, PsiModificationTracker.MODIFICATION_COUNT, ROOTS_TRACKER);
         });
     }
 

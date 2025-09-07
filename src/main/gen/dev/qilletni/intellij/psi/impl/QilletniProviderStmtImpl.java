@@ -29,13 +29,13 @@ public class QilletniProviderStmtImpl extends QilletniPsiElementBase implements 
   @Override
   @Nullable
   public QilletniBody getBody() {
-    return findChildByClass(QilletniBody.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniBody.class);
   }
 
   @Override
   @NotNull
   public QilletniStrExpr getStrExpr() {
-    return findNotNullChildByClass(QilletniStrExpr.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, QilletniStrExpr.class));
   }
 
   @Override
@@ -47,7 +47,7 @@ public class QilletniProviderStmtImpl extends QilletniPsiElementBase implements 
   @Override
   @NotNull
   public PsiElement getProvider() {
-    return findNotNullChildByType(PROVIDER);
+    return notNullChild(findChildByType(PROVIDER));
   }
 
   @Override

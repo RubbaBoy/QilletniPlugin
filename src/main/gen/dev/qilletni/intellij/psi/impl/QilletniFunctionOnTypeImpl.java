@@ -59,7 +59,7 @@ public class QilletniFunctionOnTypeImpl extends QilletniPsiElementBase implement
   @Override
   @NotNull
   public PsiElement getOn() {
-    return findNotNullChildByType(ON);
+    return notNullChild(findChildByType(ON));
   }
 
   @Override

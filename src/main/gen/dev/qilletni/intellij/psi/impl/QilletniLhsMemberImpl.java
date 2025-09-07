@@ -29,7 +29,7 @@ public class QilletniLhsMemberImpl extends QilletniPsiElementBase implements Qil
   @Override
   @NotNull
   public QilletniLhsCore getLhsCore() {
-    return findNotNullChildByClass(QilletniLhsCore.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, QilletniLhsCore.class));
   }
 
 }

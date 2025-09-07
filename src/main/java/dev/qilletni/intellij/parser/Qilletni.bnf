@@ -11,6 +11,7 @@
   elementTypeClass="dev.qilletni.intellij.psi.QilletniElementType"
   tokenTypeClass="dev.qilletni.intellij.psi.QilletniTokenType"
   psiImplUtilClass="dev.qilletni.intellij.psi.impl.QilletniPsiImplUtil"
+  elementTypeFactory="dev.qilletni.intellij.psi.QilletniElementTypeFactory.createElementType"
 
   extends(".*")="dev.qilletni.intellij.psi.impl.QilletniPsiElementBase"
 
@@ -158,7 +159,7 @@ play_stmt ::= PLAY (ID|expr) collection_limit? LOOP_PARAM?
 provider_stmt ::= PROVIDER str_expr (LEFT_CBRACKET body RIGHT_CBRACKET)?
 
 function_def ::= (DOC_COMMENT? STATIC? FUNCTION_DEF function_name LEFT_PAREN function_def_params RIGHT_PAREN function_on_type? LEFT_CBRACKET body RIGHT_CBRACKET
-               | DOC_COMMENT? NATIVE STATIC? FUNCTION_DEF function_name LEFT_PAREN function_def_params RIGHT_PAREN function_on_type?) {elementType=FUNCTION_DEFINITION}
+               | DOC_COMMENT? NATIVE STATIC? FUNCTION_DEF function_name LEFT_PAREN function_def_params RIGHT_PAREN function_on_type?) {elementType=FUNCTION_DEFINITION stubClass="dev.qilletni.intellij.psi.stubs.QilletniFunctionDefStub" implements="com.intellij.psi.StubBasedPsiElement<dev.qilletni.intellij.psi.stubs.QilletniFunctionDefStub>" mixin="dev.qilletni.intellij.psi.impl.mixin.QilletniFunctionDefMixin"}
 
 function_on_type ::= ON (INT_TYPE|STRING_TYPE|BOOLEAN_TYPE|COLLECTION_TYPE|SONG_TYPE|ALBUM_TYPE|WEIGHTS_KEYWORD|ID)
 
@@ -183,7 +184,7 @@ range_expr ::= ID DOUBLE_DOT (expr | RANGE_INFINITY)
 
 foreach_range ::= ID COLON expr
 
-entity_def ::= DOC_COMMENT? ENTITY entity_name LEFT_CBRACKET entity_body RIGHT_CBRACKET
+entity_def ::= DOC_COMMENT? ENTITY entity_name LEFT_CBRACKET entity_body RIGHT_CBRACKET {elementType=ENTITY_DEF stubClass="dev.qilletni.intellij.psi.stubs.QilletniEntityDefStub" implements="com.intellij.psi.StubBasedPsiElement<dev.qilletni.intellij.psi.stubs.QilletniEntityDefStub>" mixin="dev.qilletni.intellij.psi.impl.mixin.QilletniEntityDefMixin"}
 
 entity_body ::= entity_property_declaration* entity_constructor? function_def*
 

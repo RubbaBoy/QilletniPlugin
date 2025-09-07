@@ -29,7 +29,7 @@ public class QilletniLimitAmountImpl extends QilletniPsiElementBase implements Q
   @Override
   @NotNull
   public PsiElement getInt() {
-    return findNotNullChildByType(INT);
+    return notNullChild(findChildByType(INT));
   }
 
   @Override

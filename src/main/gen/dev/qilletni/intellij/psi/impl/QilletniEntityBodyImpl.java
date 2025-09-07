@@ -29,7 +29,7 @@ public class QilletniEntityBodyImpl extends QilletniPsiElementBase implements Qi
   @Override
   @Nullable
   public QilletniEntityConstructor getEntityConstructor() {
-    return findChildByClass(QilletniEntityConstructor.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniEntityConstructor.class);
   }
 
   @Override

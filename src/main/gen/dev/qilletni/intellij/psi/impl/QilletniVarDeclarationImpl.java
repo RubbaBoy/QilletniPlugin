@@ -29,13 +29,13 @@ public class QilletniVarDeclarationImpl extends QilletniPsiElementBase implement
   @Override
   @NotNull
   public QilletniExpr getExpr() {
-    return findNotNullChildByClass(QilletniExpr.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, QilletniExpr.class));
   }
 
   @Override
   @NotNull
   public QilletniVarName getVarName() {
-    return findNotNullChildByClass(QilletniVarName.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, QilletniVarName.class));
   }
 
   @Override
@@ -53,7 +53,7 @@ public class QilletniVarDeclarationImpl extends QilletniPsiElementBase implement
   @Override
   @NotNull
   public PsiElement getAssign() {
-    return findNotNullChildByType(ASSIGN);
+    return notNullChild(findChildByType(ASSIGN));
   }
 
   @Override

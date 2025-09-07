@@ -29,13 +29,13 @@ public class QilletniPlayStmtImpl extends QilletniPsiElementBase implements Qill
   @Override
   @Nullable
   public QilletniCollectionLimit getCollectionLimit() {
-    return findChildByClass(QilletniCollectionLimit.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniCollectionLimit.class);
   }
 
   @Override
   @Nullable
   public QilletniExpr getExpr() {
-    return findChildByClass(QilletniExpr.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniExpr.class);
   }
 
   @Override
@@ -53,7 +53,7 @@ public class QilletniPlayStmtImpl extends QilletniPsiElementBase implements Qill
   @Override
   @NotNull
   public PsiElement getPlay() {
-    return findNotNullChildByType(PLAY);
+    return notNullChild(findChildByType(PLAY));
   }
 
 }

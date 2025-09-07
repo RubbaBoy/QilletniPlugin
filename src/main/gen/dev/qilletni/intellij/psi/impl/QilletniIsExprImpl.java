@@ -65,7 +65,7 @@ public class QilletniIsExprImpl extends QilletniPsiElementBase implements Qillet
   @Override
   @NotNull
   public PsiElement getIsKeyword() {
-    return findNotNullChildByType(IS_KEYWORD);
+    return notNullChild(findChildByType(IS_KEYWORD));
   }
 
   @Override

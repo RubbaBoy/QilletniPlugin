@@ -41,13 +41,13 @@ public class QilletniImportFileImpl extends QilletniPsiElementBase implements Qi
   @Override
   @NotNull
   public PsiElement getImport() {
-    return findNotNullChildByType(IMPORT);
+    return notNullChild(findChildByType(IMPORT));
   }
 
   @Override
   @NotNull
   public PsiElement getString() {
-    return findNotNullChildByType(STRING);
+    return notNullChild(findChildByType(STRING));
   }
 
 }

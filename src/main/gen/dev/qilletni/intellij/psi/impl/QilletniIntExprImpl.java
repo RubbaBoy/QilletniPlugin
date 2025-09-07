@@ -29,7 +29,7 @@ public class QilletniIntExprImpl extends QilletniPsiElementBase implements Qille
   @Override
   @Nullable
   public QilletniExpr getExpr() {
-    return findChildByClass(QilletniExpr.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniExpr.class);
   }
 
   @Override

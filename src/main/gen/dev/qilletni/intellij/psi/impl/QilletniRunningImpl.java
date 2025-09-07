@@ -29,13 +29,13 @@ public class QilletniRunningImpl extends QilletniPsiElementBase implements Qille
   @Override
   @Nullable
   public QilletniBodyStmt getBodyStmt() {
-    return findChildByClass(QilletniBodyStmt.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniBodyStmt.class);
   }
 
   @Override
   @Nullable
   public QilletniFunctionDef getFunctionDef() {
-    return findChildByClass(QilletniFunctionDef.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniFunctionDef.class);
   }
 
 }

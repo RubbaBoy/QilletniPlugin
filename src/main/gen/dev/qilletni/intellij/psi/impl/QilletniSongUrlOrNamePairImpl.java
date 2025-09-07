@@ -29,7 +29,7 @@ public class QilletniSongUrlOrNamePairImpl extends QilletniPsiElementBase implem
   @Override
   @NotNull
   public PsiElement getBy() {
-    return findNotNullChildByType(BY);
+    return notNullChild(findChildByType(BY));
   }
 
   @Override

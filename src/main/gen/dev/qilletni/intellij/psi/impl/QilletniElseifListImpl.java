@@ -29,49 +29,49 @@ public class QilletniElseifListImpl extends QilletniPsiElementBase implements Qi
   @Override
   @NotNull
   public QilletniBody getBody() {
-    return findNotNullChildByClass(QilletniBody.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, QilletniBody.class));
   }
 
   @Override
   @NotNull
   public QilletniExpr getExpr() {
-    return findNotNullChildByClass(QilletniExpr.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, QilletniExpr.class));
   }
 
   @Override
   @NotNull
   public PsiElement getElseKeyword() {
-    return findNotNullChildByType(ELSE_KEYWORD);
+    return notNullChild(findChildByType(ELSE_KEYWORD));
   }
 
   @Override
   @NotNull
   public PsiElement getIfKeyword() {
-    return findNotNullChildByType(IF_KEYWORD);
+    return notNullChild(findChildByType(IF_KEYWORD));
   }
 
   @Override
   @NotNull
   public PsiElement getLeftCbracket() {
-    return findNotNullChildByType(LEFT_CBRACKET);
+    return notNullChild(findChildByType(LEFT_CBRACKET));
   }
 
   @Override
   @NotNull
   public PsiElement getLeftParen() {
-    return findNotNullChildByType(LEFT_PAREN);
+    return notNullChild(findChildByType(LEFT_PAREN));
   }
 
   @Override
   @NotNull
   public PsiElement getRightCbracket() {
-    return findNotNullChildByType(RIGHT_CBRACKET);
+    return notNullChild(findChildByType(RIGHT_CBRACKET));
   }
 
   @Override
   @NotNull
   public PsiElement getRightParen() {
-    return findNotNullChildByType(RIGHT_PAREN);
+    return notNullChild(findChildByType(RIGHT_PAREN));
   }
 
 }

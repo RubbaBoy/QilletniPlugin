@@ -29,7 +29,7 @@ public class QilletniImmutablePostfixExprSuffixImpl extends QilletniPsiElementBa
   @Override
   @Nullable
   public QilletniExpr getExpr() {
-    return findChildByClass(QilletniExpr.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniExpr.class);
   }
 
   @Override

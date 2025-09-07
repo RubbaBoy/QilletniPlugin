@@ -29,25 +29,25 @@ public class QilletniOrderDefineImpl extends QilletniPsiElementBase implements Q
   @Override
   @NotNull
   public PsiElement getCollectionOrder() {
-    return findNotNullChildByType(COLLECTION_ORDER);
+    return notNullChild(findChildByType(COLLECTION_ORDER));
   }
 
   @Override
   @NotNull
   public PsiElement getLeftSbracket() {
-    return findNotNullChildByType(LEFT_SBRACKET);
+    return notNullChild(findChildByType(LEFT_SBRACKET));
   }
 
   @Override
   @NotNull
   public PsiElement getOrderParam() {
-    return findNotNullChildByType(ORDER_PARAM);
+    return notNullChild(findChildByType(ORDER_PARAM));
   }
 
   @Override
   @NotNull
   public PsiElement getRightSbracket() {
-    return findNotNullChildByType(RIGHT_SBRACKET);
+    return notNullChild(findChildByType(RIGHT_SBRACKET));
   }
 
 }

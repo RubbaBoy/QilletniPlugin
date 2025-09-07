@@ -29,25 +29,25 @@ public class QilletniUnaryExprImpl extends QilletniPsiElementBase implements Qil
   @Override
   @Nullable
   public QilletniExpr getExpr() {
-    return findChildByClass(QilletniExpr.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniExpr.class);
   }
 
   @Override
   @Nullable
   public QilletniImmutablePostfixExprSuffix getImmutablePostfixExprSuffix() {
-    return findChildByClass(QilletniImmutablePostfixExprSuffix.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniImmutablePostfixExprSuffix.class);
   }
 
   @Override
   @Nullable
   public QilletniPostfixExpr getPostfixExpr() {
-    return findChildByClass(QilletniPostfixExpr.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniPostfixExpr.class);
   }
 
   @Override
   @Nullable
   public QilletniUnaryExpr getUnaryExpr() {
-    return findChildByClass(QilletniUnaryExpr.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniUnaryExpr.class);
   }
 
   @Override

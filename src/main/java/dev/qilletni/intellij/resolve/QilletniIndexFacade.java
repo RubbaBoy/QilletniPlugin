@@ -157,39 +157,46 @@ public final class QilletniIndexFacade {
 
     // List all entities visible from the given file (current file + project-local imports and alias imports)
     public static List<QilletniEntityDef> listEntitiesInScope(Project project, QilletniFile contextFile) {
-        List<VirtualFile> files = new ArrayList<>();
-        if (contextFile.getVirtualFile() != null) files.add(contextFile.getVirtualFile());
-        files.addAll(QilletniAliasResolver.getProjectLocalImports(contextFile));
+        return CachedValuesManager.getManager(project).getCachedValue(contextFile, ENTITY_LIST_CACHE_KEY, entitiesInScopeProvider(project, contextFile), false);
+    }
 
-        return CachedValuesManager.getManager(project).getCachedValue(contextFile, ENTITY_LIST_CACHE_KEY, () -> {
-            List<QilletniEntityDef> list = new ArrayList<>();
-            for (VirtualFile vf : files) {
+    private static CachedValueProvider<List<QilletniEntityDef>> entitiesInScopeProvider(Project project, QilletniFile contextFile) {
+        return () -> {
+            var files = new ArrayList<VirtualFile>();
+            if (contextFile.getVirtualFile() != null) files.add(contextFile.getVirtualFile());
+            files.addAll(QilletniAliasResolver.getProjectLocalImports(contextFile));
+
+            var list = new ArrayList<QilletniEntityDef>();
+            for (var vf : files) {
                 var psi = vf != null ? PsiManager.getInstance(project).findFile(vf) : null;
                 if (psi instanceof QilletniFile) {
                     list.addAll(PsiTreeUtil.findChildrenOfType(psi, QilletniEntityDef.class));
                 }
             }
-            // Include contextFile if no VFS
             if (contextFile.getVirtualFile() == null) {
                 list.addAll(PsiTreeUtil.findChildrenOfType(contextFile, QilletniEntityDef.class));
             }
-            return CachedValueProvider.Result.create(List.copyOf(list), PsiModificationTracker.MODIFICATION_COUNT);
-        }, false);
+            return CachedValueProvider.Result.create(List.copyOf(list), PsiModificationTracker.MODIFICATION_COUNT, dev.qilletni.intellij.resolve.QilletniAliasResolver.rootsTracker());
+        };
     }
 
     // List all top-level functions (no receiver/on-type) visible from the given file
     public static List<QilletniFunctionDef> listTopLevelFunctions(Project project, QilletniFile contextFile) {
-        List<VirtualFile> files = new ArrayList<>();
-        if (contextFile.getVirtualFile() != null) files.add(contextFile.getVirtualFile());
-        files.addAll(QilletniAliasResolver.getProjectLocalImports(contextFile));
+        return CachedValuesManager.getManager(project).getCachedValue(contextFile, TOP_LEVEL_FUNCS_CACHE_KEY, topLevelFunctionsProvider(project, contextFile), false);
+    }
 
-        return CachedValuesManager.getManager(project).getCachedValue(contextFile, TOP_LEVEL_FUNCS_CACHE_KEY, () -> {
-            List<QilletniFunctionDef> list = new ArrayList<>();
+    private static CachedValueProvider<List<QilletniFunctionDef>> topLevelFunctionsProvider(Project project, QilletniFile contextFile) {
+        return () -> {
+            var files = new ArrayList<VirtualFile>();
+            if (contextFile.getVirtualFile() != null) files.add(contextFile.getVirtualFile());
+            files.addAll(QilletniAliasResolver.getProjectLocalImports(contextFile));
+
+            var list = new ArrayList<QilletniFunctionDef>();
             if (!files.isEmpty()) {
                 var scope = GlobalSearchScope.filesScope(project, new java.util.HashSet<>(files));
-                // We don’t know names here; get all by iterating over all keys is not possible; instead, fallback to PSI per-file.
+                // Not used currently; kept to show intended scope formation for future index-based lookup
             }
-            for (VirtualFile vf : files) {
+            for (var vf : files) {
                 var psi = vf != null ? PsiManager.getInstance(project).findFile(vf) : null;
                 if (!(psi instanceof QilletniFile)) continue;
                 collectTopLevelFunctionDefs(list, psi);
@@ -197,8 +204,8 @@ public final class QilletniIndexFacade {
             if (contextFile.getVirtualFile() == null) {
                 collectTopLevelFunctionDefs(list, contextFile);
             }
-            return CachedValueProvider.Result.create(List.copyOf(list), PsiModificationTracker.MODIFICATION_COUNT);
-        }, false);
+            return CachedValueProvider.Result.create(List.copyOf(list), PsiModificationTracker.MODIFICATION_COUNT, dev.qilletni.intellij.resolve.QilletniAliasResolver.rootsTracker());
+        };
     }
 
     private static void collectTopLevelFunctionDefs(List<QilletniFunctionDef> list, PsiFile psi) {
@@ -269,12 +276,12 @@ public final class QilletniIndexFacade {
 
     private static Map<String, QilletniEntityDef> getOrCreateEntityCache(Project project, QilletniFile file) {
         return CachedValuesManager.getManager(project).getCachedValue(file, ENTITY_CACHE_KEY, () ->
-                CachedValueProvider.Result.create(new HashMap<>(), PsiModificationTracker.MODIFICATION_COUNT), false);
+                CachedValueProvider.Result.create(new HashMap<>(), PsiModificationTracker.MODIFICATION_COUNT, dev.qilletni.intellij.resolve.QilletniAliasResolver.rootsTracker()), false);
     }
 
     private static Map<String, List<QilletniFunctionDef>> getOrCreateExtMethodsCache(Project project, QilletniFile file) {
         return CachedValuesManager.getManager(project).getCachedValue(file, EXT_METHODS_CACHE_KEY, () ->
-                CachedValueProvider.Result.create(new HashMap<>(), PsiModificationTracker.MODIFICATION_COUNT), false);
+                CachedValueProvider.Result.create(new HashMap<>(), PsiModificationTracker.MODIFICATION_COUNT, dev.qilletni.intellij.resolve.QilletniAliasResolver.rootsTracker()), false);
     }
 
     private static TypeName parseTypeName(String raw) {

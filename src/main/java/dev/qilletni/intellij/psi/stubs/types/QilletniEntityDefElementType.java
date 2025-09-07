@@ -22,7 +22,7 @@ public final class QilletniEntityDefElementType extends IStubElementType<Qilletn
 
     @Override
     public QilletniEntityDef createPsi(@NotNull QilletniEntityDefStub stub) {
-        throw new UnsupportedOperationException("Stub-based PSI not used by current grammar");
+        return new QilletniEntityDefImpl(stub, this);
     }
 
     @Override

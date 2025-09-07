@@ -29,19 +29,19 @@ public class QilletniSingleWeightImpl extends QilletniPsiElementBase implements 
   @Override
   @NotNull
   public QilletniExpr getExpr() {
-    return findNotNullChildByClass(QilletniExpr.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, QilletniExpr.class));
   }
 
   @Override
   @NotNull
   public QilletniWeightAmount getWeightAmount() {
-    return findNotNullChildByClass(QilletniWeightAmount.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, QilletniWeightAmount.class));
   }
 
   @Override
   @NotNull
   public PsiElement getWeightPipe() {
-    return findNotNullChildByType(WEIGHT_PIPE);
+    return notNullChild(findChildByType(WEIGHT_PIPE));
   }
 
 }

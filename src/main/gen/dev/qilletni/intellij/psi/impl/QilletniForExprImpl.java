@@ -29,19 +29,19 @@ public class QilletniForExprImpl extends QilletniPsiElementBase implements Qille
   @Override
   @Nullable
   public QilletniExpr getExpr() {
-    return findChildByClass(QilletniExpr.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniExpr.class);
   }
 
   @Override
   @Nullable
   public QilletniForeachRange getForeachRange() {
-    return findChildByClass(QilletniForeachRange.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniForeachRange.class);
   }
 
   @Override
   @Nullable
   public QilletniRangeExpr getRangeExpr() {
-    return findChildByClass(QilletniRangeExpr.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniRangeExpr.class);
   }
 
 }

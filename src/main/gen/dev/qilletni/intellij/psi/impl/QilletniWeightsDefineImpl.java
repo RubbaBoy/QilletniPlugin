@@ -29,7 +29,7 @@ public class QilletniWeightsDefineImpl extends QilletniPsiElementBase implements
   @Override
   @Nullable
   public QilletniFunctionCall getFunctionCall() {
-    return findChildByClass(QilletniFunctionCall.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniFunctionCall.class);
   }
 
   @Override
@@ -41,19 +41,19 @@ public class QilletniWeightsDefineImpl extends QilletniPsiElementBase implements
   @Override
   @NotNull
   public PsiElement getLeftSbracket() {
-    return findNotNullChildByType(LEFT_SBRACKET);
+    return notNullChild(findChildByType(LEFT_SBRACKET));
   }
 
   @Override
   @NotNull
   public PsiElement getRightSbracket() {
-    return findNotNullChildByType(RIGHT_SBRACKET);
+    return notNullChild(findChildByType(RIGHT_SBRACKET));
   }
 
   @Override
   @NotNull
   public PsiElement getWeightsKeyword() {
-    return findNotNullChildByType(WEIGHTS_KEYWORD);
+    return notNullChild(findChildByType(WEIGHTS_KEYWORD));
   }
 
 }

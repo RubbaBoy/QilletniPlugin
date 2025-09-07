@@ -33,7 +33,11 @@ public final class QilletniToolchainService {
 
     public QilletniToolchainService(@NotNull Project project) {
         this.project = project;
-        this.versionInfo = CachedValuesManager.getManager(project).createCachedValue(() -> CachedValueProvider.Result.create(fetchValidation(), VfsUtil.getUserHomeDir()), false);
+        this.versionInfo = CachedValuesManager.getManager(project).createCachedValue(() -> {
+            var appTracker = QilletniToolchainSettings.getInstance().getModificationTracker();
+            var projectTracker = QilletniToolchainSettingsProject.getInstance(project).getModificationTracker();
+            return CachedValueProvider.Result.create(fetchValidation(), appTracker, projectTracker);
+        }, false);
     }
 
     public static QilletniToolchainService getInstance(@NotNull Project project) {

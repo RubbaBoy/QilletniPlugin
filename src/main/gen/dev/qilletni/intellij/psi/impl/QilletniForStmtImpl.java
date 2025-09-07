@@ -29,43 +29,43 @@ public class QilletniForStmtImpl extends QilletniPsiElementBase implements Qille
   @Override
   @NotNull
   public QilletniBody getBody() {
-    return findNotNullChildByClass(QilletniBody.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, QilletniBody.class));
   }
 
   @Override
   @NotNull
   public QilletniForExpr getForExpr() {
-    return findNotNullChildByClass(QilletniForExpr.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, QilletniForExpr.class));
   }
 
   @Override
   @NotNull
   public PsiElement getForKeyword() {
-    return findNotNullChildByType(FOR_KEYWORD);
+    return notNullChild(findChildByType(FOR_KEYWORD));
   }
 
   @Override
   @NotNull
   public PsiElement getLeftCbracket() {
-    return findNotNullChildByType(LEFT_CBRACKET);
+    return notNullChild(findChildByType(LEFT_CBRACKET));
   }
 
   @Override
   @NotNull
   public PsiElement getLeftParen() {
-    return findNotNullChildByType(LEFT_PAREN);
+    return notNullChild(findChildByType(LEFT_PAREN));
   }
 
   @Override
   @NotNull
   public PsiElement getRightCbracket() {
-    return findNotNullChildByType(RIGHT_CBRACKET);
+    return notNullChild(findChildByType(RIGHT_CBRACKET));
   }
 
   @Override
   @NotNull
   public PsiElement getRightParen() {
-    return findNotNullChildByType(RIGHT_PAREN);
+    return notNullChild(findChildByType(RIGHT_PAREN));
   }
 
 }

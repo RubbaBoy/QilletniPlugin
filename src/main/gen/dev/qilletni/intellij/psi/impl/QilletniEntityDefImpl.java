@@ -8,12 +8,19 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static dev.qilletni.intellij.psi.QilletniTypes.*;
+import dev.qilletni.intellij.psi.impl.mixin.QilletniEntityDefMixin;
 import dev.qilletni.intellij.psi.*;
+import dev.qilletni.intellij.psi.stubs.QilletniEntityDefStub;
+import com.intellij.psi.stubs.IStubElementType;
 
-public class QilletniEntityDefImpl extends QilletniPsiElementBase implements QilletniEntityDef {
+public class QilletniEntityDefImpl extends QilletniEntityDefMixin implements QilletniEntityDef {
 
   public QilletniEntityDefImpl(@NotNull ASTNode node) {
     super(node);
+  }
+
+  public QilletniEntityDefImpl(@NotNull QilletniEntityDefStub stub, @NotNull IStubElementType<?, ?> type) {
+    super(stub, type);
   }
 
   public void accept(@NotNull QilletniVisitor visitor) {
@@ -29,13 +36,13 @@ public class QilletniEntityDefImpl extends QilletniPsiElementBase implements Qil
   @Override
   @NotNull
   public QilletniEntityBody getEntityBody() {
-    return findNotNullChildByClass(QilletniEntityBody.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, QilletniEntityBody.class));
   }
 
   @Override
   @NotNull
   public QilletniEntityName getEntityName() {
-    return findNotNullChildByClass(QilletniEntityName.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, QilletniEntityName.class));
   }
 
   @Override
@@ -47,19 +54,19 @@ public class QilletniEntityDefImpl extends QilletniPsiElementBase implements Qil
   @Override
   @NotNull
   public PsiElement getEntity() {
-    return findNotNullChildByType(ENTITY);
+    return notNullChild(findChildByType(ENTITY));
   }
 
   @Override
   @NotNull
   public PsiElement getLeftCbracket() {
-    return findNotNullChildByType(LEFT_CBRACKET);
+    return notNullChild(findChildByType(LEFT_CBRACKET));
   }
 
   @Override
   @NotNull
   public PsiElement getRightCbracket() {
-    return findNotNullChildByType(RIGHT_CBRACKET);
+    return notNullChild(findChildByType(RIGHT_CBRACKET));
   }
 
 }

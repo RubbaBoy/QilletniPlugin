@@ -29,19 +29,19 @@ public class QilletniRangeExprImpl extends QilletniPsiElementBase implements Qil
   @Override
   @Nullable
   public QilletniExpr getExpr() {
-    return findChildByClass(QilletniExpr.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniExpr.class);
   }
 
   @Override
   @NotNull
   public PsiElement getDoubleDot() {
-    return findNotNullChildByType(DOUBLE_DOT);
+    return notNullChild(findChildByType(DOUBLE_DOT));
   }
 
   @Override
   @NotNull
   public PsiElement getId() {
-    return findNotNullChildByType(ID);
+    return notNullChild(findChildByType(ID));
   }
 
   @Override

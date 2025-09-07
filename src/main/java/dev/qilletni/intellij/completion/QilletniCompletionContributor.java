@@ -364,6 +364,17 @@ public final class QilletniCompletionContributor extends CompletionContributor {
         }
     }
 
+    private static void createFunctionLookupElement(CompletionResultSet result, QilletniFunctionDef def) {
+        var nameEl = PsiTreeUtil.findChildOfType(def, QilletniFunctionName.class);
+        if (nameEl == null) return;
+        var functionArgs = def.getFunctionDefParams().getParamNameList().stream().map(QilletniParamName::getText).collect(Collectors.joining(", ", "(", ")"));
+        result.addElement(LookupElementBuilder.create(def, nameEl.getText())
+                .bold()
+                .appendTailText(functionArgs, true)
+                .withIcon(AllIcons.Nodes.Method)
+                .withInsertHandler(CALL_PARENS_INSERT_HANDLER));
+    }
+
     private static final class TopLevelFunctionsCompletionProvider extends CompletionProvider<CompletionParameters> {
         @Override
         protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
@@ -374,13 +385,7 @@ public final class QilletniCompletionContributor extends CompletionContributor {
 
             var functions = QilletniIndexFacade.listTopLevelFunctions(project, (QilletniFile) file);
             for (var f : functions) {
-                var nameEl = PsiTreeUtil.findChildOfType(f, QilletniFunctionName.class);
-                if (nameEl == null) {
-                    continue;
-                }
-                result.addElement(LookupElementBuilder.create(f, nameEl.getText())
-                        .withIcon(AllIcons.Nodes.Method)
-                        .withInsertHandler(CALL_PARENS_INSERT_HANDLER));
+                createFunctionLookupElement(result, f);
             }
         }
     }
@@ -469,20 +474,13 @@ public final class QilletniCompletionContributor extends CompletionContributor {
         var entity = QilletniIndexFacade.findEntityByTypeName(idLeaf.getProject(), (QilletniFile) file, receiverType);
         if (entity != null) {
             for (var def : PsiTreeUtil.findChildrenOfType(entity, QilletniFunctionDef.class)) {
-                var nameEl = PsiTreeUtil.findChildOfType(def, QilletniFunctionName.class);
-                if (nameEl == null) continue;
                 boolean isStatic = isStaticFunctionDef(def);
                 if (typeReceiver) {
                     if (!isStatic) continue;
                 } else {
                     if (isStatic) continue;
                 }
-                var functionArgs = def.getFunctionDefParams().getParamNameList().stream().map(QilletniParamName::getText).collect(Collectors.joining(", ", "(", ")"));
-                result.addElement(LookupElementBuilder.create(def, nameEl.getText())
-                        .bold()
-                        .appendTailText(functionArgs, true)
-                        .withIcon(AllIcons.Nodes.Method)
-                        .withInsertHandler(CALL_PARENS_INSERT_HANDLER));
+                createFunctionLookupElement(result, def);
             }
         }
 
@@ -490,14 +488,7 @@ public final class QilletniCompletionContributor extends CompletionContributor {
         if (!typeReceiver) {
             var exts = QilletniIndexFacade.listExtensionMethods(idLeaf.getProject(), (QilletniFile) file, receiverType);
             for (var def : exts) {
-                var nameEl = PsiTreeUtil.findChildOfType(def, QilletniFunctionName.class);
-                if (nameEl == null) continue;
-                var functionArgs = def.getFunctionDefParams().getParamNameList().stream().map(QilletniParamName::getText).collect(Collectors.joining(", ", "(", ")"));
-                result.addElement(LookupElementBuilder.create(def, nameEl.getText())
-                        .bold()
-                        .appendTailText(functionArgs, true)
-                        .withIcon(AllIcons.Nodes.MethodReference)
-                        .withInsertHandler(CALL_PARENS_INSERT_HANDLER));
+                createFunctionLookupElement(result, def);
             }
         }
     }

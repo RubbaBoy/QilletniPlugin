@@ -29,25 +29,25 @@ public class QilletniFunctionCallImpl extends QilletniPsiElementBase implements 
   @Override
   @Nullable
   public QilletniExprList getExprList() {
-    return findChildByClass(QilletniExprList.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniExprList.class);
   }
 
   @Override
   @NotNull
   public PsiElement getId() {
-    return findNotNullChildByType(ID);
+    return notNullChild(findChildByType(ID));
   }
 
   @Override
   @NotNull
   public PsiElement getLeftParen() {
-    return findNotNullChildByType(LEFT_PAREN);
+    return notNullChild(findChildByType(LEFT_PAREN));
   }
 
   @Override
   @NotNull
   public PsiElement getRightParen() {
-    return findNotNullChildByType(RIGHT_PAREN);
+    return notNullChild(findChildByType(RIGHT_PAREN));
   }
 
 }

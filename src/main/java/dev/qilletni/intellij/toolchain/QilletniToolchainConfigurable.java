@@ -80,8 +80,7 @@ public final class QilletniToolchainConfigurable implements Configurable {
     @Override
     public void apply() {
         var settings = QilletniToolchainSettings.getInstance();
-        var s = settings.getState();
-        if (s != null) s.toolchainPath = appPath.getText();
+        settings.setToolchainPath(appPath.getText());
     }
 
     @Override

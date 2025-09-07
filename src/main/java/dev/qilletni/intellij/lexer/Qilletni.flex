@@ -124,8 +124,8 @@ Ws = [ \t\r\n]+
   "\\".                           { /* any escape sequence, continue */ }
   [^\n\r\"\\]+                    { /* text, continue */ }
   "\""                            { yybegin(YYINITIAL); return QilletniTypes.STRING; }
-  \r?\n                           { yybegin(YYINITIAL); return TokenType.BAD_CHARACTER; }  // unterminated string line-break
-  <<EOF>>                         { yybegin(YYINITIAL); return TokenType.BAD_CHARACTER; }  // unterminated string at EOF
+  \r?\n                           { yybegin(YYINITIAL); return QilletniTypes.STRING; }  // unterminated string line-break
+  <<EOF>>                         { yybegin(YYINITIAL); return QilletniTypes.STRING; }  // unterminated string at EOF
 }
 
 // ORDER mode for collection order brackets

@@ -29,25 +29,25 @@ public class QilletniCollectionExprImpl extends QilletniPsiElementBase implement
   @Override
   @Nullable
   public QilletniCollectionUrlOrNamePair getCollectionUrlOrNamePair() {
-    return findChildByClass(QilletniCollectionUrlOrNamePair.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniCollectionUrlOrNamePair.class);
   }
 
   @Override
   @Nullable
   public QilletniListExpression getListExpression() {
-    return findChildByClass(QilletniListExpression.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniListExpression.class);
   }
 
   @Override
   @Nullable
   public QilletniOrderDefine getOrderDefine() {
-    return findChildByClass(QilletniOrderDefine.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniOrderDefine.class);
   }
 
   @Override
   @Nullable
   public QilletniWeightsDefine getWeightsDefine() {
-    return findChildByClass(QilletniWeightsDefine.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniWeightsDefine.class);
   }
 
   @Override

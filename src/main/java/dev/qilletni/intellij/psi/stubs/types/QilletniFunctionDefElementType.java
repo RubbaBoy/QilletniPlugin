@@ -21,7 +21,7 @@ public final class QilletniFunctionDefElementType extends IStubElementType<Qille
 
     @Override
     public QilletniFunctionDef createPsi(@NotNull QilletniFunctionDefStub stub) {
-        throw new UnsupportedOperationException("Stub-based PSI not used by current grammar");
+        return new QilletniFunctionDefImpl(stub, this);
     }
 
     @Override

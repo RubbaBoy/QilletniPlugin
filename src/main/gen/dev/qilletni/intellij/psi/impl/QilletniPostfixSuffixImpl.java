@@ -29,7 +29,7 @@ public class QilletniPostfixSuffixImpl extends QilletniPsiElementBase implements
   @Override
   @Nullable
   public QilletniFunctionCall getFunctionCall() {
-    return findChildByClass(QilletniFunctionCall.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniFunctionCall.class);
   }
 
   @Override

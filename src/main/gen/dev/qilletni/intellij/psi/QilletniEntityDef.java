@@ -4,8 +4,10 @@ package dev.qilletni.intellij.psi;
 import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.StubBasedPsiElement;
+import dev.qilletni.intellij.psi.stubs.QilletniEntityDefStub;
 
-public interface QilletniEntityDef extends PsiElement {
+public interface QilletniEntityDef extends StubBasedPsiElement<QilletniEntityDefStub> {
 
   @NotNull
   QilletniEntityBody getEntityBody();

@@ -29,7 +29,7 @@ public class QilletniExprImpl extends QilletniPsiElementBase implements Qilletni
   @Override
   @NotNull
   public QilletniLogicalOrExpr getLogicalOrExpr() {
-    return findNotNullChildByClass(QilletniLogicalOrExpr.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, QilletniLogicalOrExpr.class));
   }
 
 }

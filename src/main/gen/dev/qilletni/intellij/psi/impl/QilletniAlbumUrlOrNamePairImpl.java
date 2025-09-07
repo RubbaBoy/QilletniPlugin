@@ -29,13 +29,13 @@ public class QilletniAlbumUrlOrNamePairImpl extends QilletniPsiElementBase imple
   @Override
   @NotNull
   public PsiElement getAlbumType() {
-    return findNotNullChildByType(ALBUM_TYPE);
+    return notNullChild(findChildByType(ALBUM_TYPE));
   }
 
   @Override
   @NotNull
   public PsiElement getBy() {
-    return findNotNullChildByType(BY);
+    return notNullChild(findChildByType(BY));
   }
 
 }

@@ -29,7 +29,7 @@ public class QilletniSongExprImpl extends QilletniPsiElementBase implements Qill
   @Override
   @NotNull
   public QilletniSongUrlOrNamePair getSongUrlOrNamePair() {
-    return findNotNullChildByClass(QilletniSongUrlOrNamePair.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, QilletniSongUrlOrNamePair.class));
   }
 
 }

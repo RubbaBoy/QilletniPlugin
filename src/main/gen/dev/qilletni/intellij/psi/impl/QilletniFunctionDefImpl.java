@@ -8,12 +8,19 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static dev.qilletni.intellij.psi.QilletniTypes.*;
+import dev.qilletni.intellij.psi.impl.mixin.QilletniFunctionDefMixin;
 import dev.qilletni.intellij.psi.*;
+import dev.qilletni.intellij.psi.stubs.QilletniFunctionDefStub;
+import com.intellij.psi.stubs.IStubElementType;
 
-public class QilletniFunctionDefImpl extends QilletniPsiElementBase implements QilletniFunctionDef {
+public class QilletniFunctionDefImpl extends QilletniFunctionDefMixin implements QilletniFunctionDef {
 
   public QilletniFunctionDefImpl(@NotNull ASTNode node) {
     super(node);
+  }
+
+  public QilletniFunctionDefImpl(@NotNull QilletniFunctionDefStub stub, @NotNull IStubElementType<?, ?> type) {
+    super(stub, type);
   }
 
   public void accept(@NotNull QilletniVisitor visitor) {
@@ -29,25 +36,25 @@ public class QilletniFunctionDefImpl extends QilletniPsiElementBase implements Q
   @Override
   @Nullable
   public QilletniBody getBody() {
-    return findChildByClass(QilletniBody.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniBody.class);
   }
 
   @Override
   @NotNull
   public QilletniFunctionDefParams getFunctionDefParams() {
-    return findNotNullChildByClass(QilletniFunctionDefParams.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, QilletniFunctionDefParams.class));
   }
 
   @Override
   @NotNull
   public QilletniFunctionName getFunctionName() {
-    return findNotNullChildByClass(QilletniFunctionName.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, QilletniFunctionName.class));
   }
 
   @Override
   @Nullable
   public QilletniFunctionOnType getFunctionOnType() {
-    return findChildByClass(QilletniFunctionOnType.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniFunctionOnType.class);
   }
 
   @Override
@@ -59,7 +66,7 @@ public class QilletniFunctionDefImpl extends QilletniPsiElementBase implements Q
   @Override
   @NotNull
   public PsiElement getFunctionDef() {
-    return findNotNullChildByType(FUNCTION_DEF);
+    return notNullChild(findChildByType(FUNCTION_DEF));
   }
 
   @Override
@@ -71,7 +78,7 @@ public class QilletniFunctionDefImpl extends QilletniPsiElementBase implements Q
   @Override
   @NotNull
   public PsiElement getLeftParen() {
-    return findNotNullChildByType(LEFT_PAREN);
+    return notNullChild(findChildByType(LEFT_PAREN));
   }
 
   @Override
@@ -89,7 +96,7 @@ public class QilletniFunctionDefImpl extends QilletniPsiElementBase implements Q
   @Override
   @NotNull
   public PsiElement getRightParen() {
-    return findNotNullChildByType(RIGHT_PAREN);
+    return notNullChild(findChildByType(RIGHT_PAREN));
   }
 
   @Override

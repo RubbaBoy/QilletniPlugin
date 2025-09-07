@@ -35,7 +35,7 @@ public class QilletniBodyImpl extends QilletniPsiElementBase implements Qilletni
   @Override
   @Nullable
   public QilletniReturnStmt getReturnStmt() {
-    return findChildByClass(QilletniReturnStmt.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniReturnStmt.class);
   }
 
 }

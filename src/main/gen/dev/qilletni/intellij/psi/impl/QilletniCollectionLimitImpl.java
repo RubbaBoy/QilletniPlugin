@@ -29,25 +29,25 @@ public class QilletniCollectionLimitImpl extends QilletniPsiElementBase implemen
   @Override
   @NotNull
   public QilletniLimitAmount getLimitAmount() {
-    return findNotNullChildByClass(QilletniLimitAmount.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, QilletniLimitAmount.class));
   }
 
   @Override
   @NotNull
   public PsiElement getLeftSbracket() {
-    return findNotNullChildByType(LEFT_SBRACKET);
+    return notNullChild(findChildByType(LEFT_SBRACKET));
   }
 
   @Override
   @NotNull
   public PsiElement getLimitParam() {
-    return findNotNullChildByType(LIMIT_PARAM);
+    return notNullChild(findChildByType(LIMIT_PARAM));
   }
 
   @Override
   @NotNull
   public PsiElement getRightSbracket() {
-    return findNotNullChildByType(RIGHT_SBRACKET);
+    return notNullChild(findChildByType(RIGHT_SBRACKET));
   }
 
 }

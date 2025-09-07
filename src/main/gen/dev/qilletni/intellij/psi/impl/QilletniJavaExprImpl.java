@@ -29,7 +29,7 @@ public class QilletniJavaExprImpl extends QilletniPsiElementBase implements Qill
   @Override
   @NotNull
   public PsiElement getEmpty() {
-    return findNotNullChildByType(EMPTY);
+    return notNullChild(findChildByType(EMPTY));
   }
 
 }

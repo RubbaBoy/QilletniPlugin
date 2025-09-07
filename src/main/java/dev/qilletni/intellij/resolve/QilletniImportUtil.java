@@ -2,6 +2,10 @@ package dev.qilletni.intellij.resolve;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.roots.ProjectFileIndex;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleUtilCore;
+import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -41,8 +45,11 @@ final class QilletniImportUtil {
     }
 
     static List<VirtualFile> getProjectLocalImports(QilletniFile contextFile) {
-        Set<VirtualFile> set = new LinkedHashSet<>(collectUnaliasedImports(contextFile));
-        for (List<VirtualFile> vfs : collectAliasedImports(contextFile).values()) set.addAll(vfs);
+        // Constrain project-local imports to files under any 'qilletni-src' source roots of the context module
+        Set<VirtualFile> set = new LinkedHashSet<>();
+        set.addAll(filterToQilletniSrc(contextFile, collectUnaliasedImports(contextFile)));
+        Map<String, List<VirtualFile>> aliased = collectAliasedImports(contextFile);
+        for (List<VirtualFile> vfs : aliased.values()) set.addAll(filterToQilletniSrc(contextFile, vfs));
         return new ArrayList<>(set);
     }
 
@@ -140,5 +147,35 @@ final class QilletniImportUtil {
         if (basePath == null) return null;
         File ioFile = new File(basePath, importPathLiteral);
         return LocalFileSystem.getInstance().findFileByIoFile(ioFile);
+    }
+
+    private static List<VirtualFile> filterToQilletniSrc(QilletniFile contextFile, List<VirtualFile> files) {
+        if (files == null || files.isEmpty()) return List.of();
+        var project = contextFile.getProject();
+        var fileIndex = ProjectFileIndex.getInstance(project);
+        Module module = null;
+        var ctxVf = contextFile.getVirtualFile();
+        if (ctxVf != null) {
+            module = ModuleUtilCore.findModuleForFile(ctxVf, project);
+        }
+        Set<String> allowedRootUrls = new HashSet<>();
+        if (module != null) {
+            for (var root : ModuleRootManager.getInstance(module).getSourceRoots(false)) {
+                if (root != null && "qilletni-src".equals(root.getName())) {
+                    allowedRootUrls.add(root.getUrl());
+                }
+            }
+        }
+        List<VirtualFile> result = new ArrayList<>();
+        for (var vf : files) {
+            if (vf == null) continue;
+            var root = fileIndex.getSourceRootForFile(vf);
+            if (root == null) continue;
+            if (!"qilletni-src".equals(root.getName())) continue;
+            if (module == null || allowedRootUrls.isEmpty() || allowedRootUrls.contains(root.getUrl())) {
+                result.add(vf);
+            }
+        }
+        return result;
     }
 }

@@ -29,13 +29,13 @@ public class QilletniWeightAmountImpl extends QilletniPsiElementBase implements 
   @Override
   @NotNull
   public PsiElement getInt() {
-    return findNotNullChildByType(INT);
+    return notNullChild(findChildByType(INT));
   }
 
   @Override
   @NotNull
   public PsiElement getWeightUnit() {
-    return findNotNullChildByType(WEIGHT_UNIT);
+    return notNullChild(findChildByType(WEIGHT_UNIT));
   }
 
 }

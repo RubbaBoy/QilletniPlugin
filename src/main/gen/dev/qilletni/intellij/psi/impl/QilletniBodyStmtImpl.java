@@ -29,25 +29,25 @@ public class QilletniBodyStmtImpl extends QilletniPsiElementBase implements Qill
   @Override
   @Nullable
   public QilletniExpr getExpr() {
-    return findChildByClass(QilletniExpr.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniExpr.class);
   }
 
   @Override
   @Nullable
   public QilletniForStmt getForStmt() {
-    return findChildByClass(QilletniForStmt.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniForStmt.class);
   }
 
   @Override
   @Nullable
   public QilletniIfStmt getIfStmt() {
-    return findChildByClass(QilletniIfStmt.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniIfStmt.class);
   }
 
   @Override
   @Nullable
   public QilletniStmt getStmt() {
-    return findChildByClass(QilletniStmt.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniStmt.class);
   }
 
   @Override

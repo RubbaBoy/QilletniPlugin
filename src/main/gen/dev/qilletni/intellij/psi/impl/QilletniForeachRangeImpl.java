@@ -29,19 +29,19 @@ public class QilletniForeachRangeImpl extends QilletniPsiElementBase implements 
   @Override
   @NotNull
   public QilletniExpr getExpr() {
-    return findNotNullChildByClass(QilletniExpr.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, QilletniExpr.class));
   }
 
   @Override
   @NotNull
   public PsiElement getColon() {
-    return findNotNullChildByType(COLON);
+    return notNullChild(findChildByType(COLON));
   }
 
   @Override
   @NotNull
   public PsiElement getId() {
-    return findNotNullChildByType(ID);
+    return notNullChild(findChildByType(ID));
   }
 
 }

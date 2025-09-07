@@ -29,7 +29,7 @@ public class QilletniVarNameImpl extends QilletniNamedElementImpl implements Qil
   @Override
   @NotNull
   public PsiElement getId() {
-    return findNotNullChildByType(ID);
+    return notNullChild(findChildByType(ID));
   }
 
 }

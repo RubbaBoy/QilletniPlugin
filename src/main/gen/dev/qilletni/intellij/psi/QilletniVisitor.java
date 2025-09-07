@@ -5,6 +5,9 @@ import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNameIdentifierOwner;
+import com.intellij.psi.StubBasedPsiElement;
+import dev.qilletni.intellij.psi.stubs.QilletniEntityDefStub;
+import dev.qilletni.intellij.psi.stubs.QilletniFunctionDefStub;
 
 public class QilletniVisitor extends PsiElementVisitor {
 
@@ -73,7 +76,7 @@ public class QilletniVisitor extends PsiElementVisitor {
   }
 
   public void visitEntityDef(@NotNull QilletniEntityDef o) {
-    visitPsiElement(o);
+    visitStubBasedPsiElement(o);
   }
 
   public void visitEntityInitialize(@NotNull QilletniEntityInitialize o) {
@@ -113,7 +116,7 @@ public class QilletniVisitor extends PsiElementVisitor {
   }
 
   public void visitFunctionDef(@NotNull QilletniFunctionDef o) {
-    visitPsiElement(o);
+    visitStubBasedPsiElement(o);
   }
 
   public void visitFunctionDefParams(@NotNull QilletniFunctionDefParams o) {
@@ -277,6 +280,10 @@ public class QilletniVisitor extends PsiElementVisitor {
   }
 
   public void visitPsiNameIdentifierOwner(@NotNull PsiNameIdentifierOwner o) {
+    visitElement(o);
+  }
+
+  public void visitStubBasedPsiElement(@NotNull StubBasedPsiElement o) {
     visitElement(o);
   }
 

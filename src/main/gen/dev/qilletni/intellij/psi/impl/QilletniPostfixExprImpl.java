@@ -35,7 +35,7 @@ public class QilletniPostfixExprImpl extends QilletniPsiElementBase implements Q
   @Override
   @NotNull
   public QilletniPrimaryExpr getPrimaryExpr() {
-    return findNotNullChildByClass(QilletniPrimaryExpr.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, QilletniPrimaryExpr.class));
   }
 
 }

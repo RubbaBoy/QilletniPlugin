@@ -29,13 +29,13 @@ public class QilletniReturnStmtImpl extends QilletniPsiElementBase implements Qi
   @Override
   @NotNull
   public QilletniExpr getExpr() {
-    return findNotNullChildByClass(QilletniExpr.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, QilletniExpr.class));
   }
 
   @Override
   @NotNull
   public PsiElement getReturn() {
-    return findNotNullChildByType(RETURN);
+    return notNullChild(findChildByType(RETURN));
   }
 
 }

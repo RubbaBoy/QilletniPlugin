@@ -35,7 +35,7 @@ public class QilletniLhsCoreImpl extends QilletniPsiElementBase implements Qille
   @Override
   @NotNull
   public QilletniPrimaryExpr getPrimaryExpr() {
-    return findNotNullChildByClass(QilletniPrimaryExpr.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, QilletniPrimaryExpr.class));
   }
 
 }

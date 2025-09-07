@@ -29,25 +29,25 @@ public class QilletniStmtImpl extends QilletniPsiElementBase implements Qilletni
   @Override
   @Nullable
   public QilletniAsmt getAsmt() {
-    return findChildByClass(QilletniAsmt.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniAsmt.class);
   }
 
   @Override
   @Nullable
   public QilletniEntityDef getEntityDef() {
-    return findChildByClass(QilletniEntityDef.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniEntityDef.class);
   }
 
   @Override
   @Nullable
   public QilletniPlayStmt getPlayStmt() {
-    return findChildByClass(QilletniPlayStmt.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniPlayStmt.class);
   }
 
   @Override
   @Nullable
   public QilletniProviderStmt getProviderStmt() {
-    return findChildByClass(QilletniProviderStmt.class);
+    return PsiTreeUtil.getChildOfType(this, QilletniProviderStmt.class);
   }
 
 }
