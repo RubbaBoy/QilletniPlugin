@@ -549,6 +549,32 @@ public final class QilletniCompletionContributor extends CompletionContributor {
         return false;
     }
 
+    // Find previous significant leaf, skipping whitespace/comments and optionally skipping the just-inserted ID once
+    private static PsiElement previousSignificantLeafSkippingJustInserted(PsiElement fromLeaf, String justInsertedText) {
+        PsiElement prev = fromLeaf;
+        // Start from the previous leaf of the given position
+        prev = com.intellij.psi.util.PsiTreeUtil.prevLeaf(prev, true);
+        boolean skippedInsertedId = false;
+        while (prev != null) {
+            if (prev.getNode() == null) return null;
+            var t = prev.getNode().getElementType();
+            if (t == TokenType.WHITE_SPACE || t == QilletniTypes.LINE_COMMENT || t == QilletniTypes.BLOCK_COMMENT || t == QilletniTypes.DOC_COMMENT) {
+                prev = com.intellij.psi.util.PsiTreeUtil.prevLeaf(prev, true);
+                continue;
+            }
+            // If the immediate non-trivia token is the just-inserted identifier, skip it once
+            if (!skippedInsertedId && t == QilletniTypes.ID && justInsertedText != null && justInsertedText.contentEquals(prev.getText())) {
+                skippedInsertedId = true;
+                prev = com.intellij.psi.util.PsiTreeUtil.prevLeaf(prev, true);
+                continue;
+            }
+            System.out.println("retting prev = " + prev);
+            return prev;
+        }
+        System.out.println("nulllll");
+        return null;
+    }
+
     // Infer a receiver type for completion: try static inference, then var-declaration lookup.
     private static String inferReceiverTypeForCompletion(QilletniFile file, PsiElement primary) {
         if (primary == null) return null;
@@ -637,7 +663,16 @@ public final class QilletniCompletionContributor extends CompletionContributor {
         var beforeTailEl = file.findElementAt(Math.max(0, tail - 1));
         boolean parsedCtor = PsiTreeUtil.getParentOfType(caretEl, QilletniEntityInitialize.class) != null
                 || PsiTreeUtil.getParentOfType(beforeTailEl, QilletniEntityInitialize.class) != null;
-        boolean afterNew = hasPrecedingNew(caretEl != null ? caretEl : beforeTailEl);
+
+        // Compute a robust previous significant token before the just-inserted ID text
+        String justInserted = item.getLookupString();
+        PsiElement scanFrom = beforeTailEl != null ? beforeTailEl : caretEl;
+        PsiElement prevSig = scanFrom != null ? previousSignificantLeafSkippingJustInserted(scanFrom, justInserted) : null;
+        boolean afterNew = false;
+        if (prevSig != null && prevSig.getNode() != null) {
+            var tPrev = prevSig.getNode().getElementType();
+            afterNew = (tPrev == QilletniTypes.NEW) || hasPrecedingNew(prevSig);
+        }
         if (!parsedCtor && !afterNew) return; // Only act in constructor-like context
 
         CharSequence seq = doc.getCharsSequence();
