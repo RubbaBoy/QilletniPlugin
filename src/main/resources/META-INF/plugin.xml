@@ -1,5 +1,6 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
+    <resource-bundle>messages.QilletniBundle</resource-bundle>
     <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
     <id>dev.qilletni.intellij.QilletniPlugin</id>
 
@@ -75,6 +76,21 @@
 
         <postStartupActivity implementation="dev.qilletni.intellij.project.QilletniSourceRootStartupActivity"/>
         <notificationGroup id="Qilletni Source Root" displayType="BALLOON" isLogByDefault="false"/>
+
+        <localInspection language="Qilletni"
+                          groupPath="Qilletni"
+                          shortName="ExtensionReceiverParam"
+                          displayName="Extension function must declare receiver parameter"
+                          enabledByDefault="true"
+                          implementationClass="dev.qilletni.intellij.inspections.QilletniExtensionReceiverParamInspection"/>
+
+        <codeInsight.declarativeInlayProvider
+                group="PARAMETERS_GROUP"
+                implementationClass="dev.qilletni.intellij.hints.QilletniExtensionReceiverDeclarativeHintsProvider"
+                isEnabledByDefault="true"
+                language="Qilletni"
+                nameKey="qilletni.inlay.receiverType.name"
+                providerId="qilletni.receiverType"/>
     </extensions>
 
     <actions>

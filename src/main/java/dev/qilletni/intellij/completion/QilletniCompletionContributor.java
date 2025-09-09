@@ -31,6 +31,7 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.patterns.PlatformPatterns;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.TokenType;
+import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
 import dev.qilletni.intellij.QilletniFile;
@@ -56,6 +57,7 @@ import dev.qilletni.intellij.resolve.QilletniResolveUtil;
 import dev.qilletni.intellij.spotify.QilletniSpotifyService.MusicTypeContext;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import dev.qilletni.intellij.util.QilletniMusicPsiUtil;
@@ -75,6 +77,89 @@ import java.util.regex.Pattern;
  * - Top-level functions for bare calls
  */
 public final class QilletniCompletionContributor extends CompletionContributor {
+
+    private static final class DotAfterExpressionCompletionProvider extends CompletionProvider<CompletionParameters> {
+        @Override
+        protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
+            PsiElement pos = parameters.getPosition();
+            var file = pos.getContainingFile();
+            if (!(file instanceof QilletniFile)) return;
+
+            // Determine if we are at ".<caret>" position
+            boolean atErrorAfterDot = pos.getNode() != null && pos.getNode().getElementType() == TokenType.ERROR_ELEMENT && hasPrecedingDot(pos);
+            boolean atDot = pos.getNode() != null && pos.getNode().getElementType() == QilletniTypes.DOT;
+            if (!atErrorAfterDot && !atDot) return;
+
+            // Find surrounding postfix expr and its primary (receiver on the left)
+            var postfix = PsiTreeUtil.getParentOfType(pos, QilletniPostfixExpr.class);
+            if (postfix == null) {
+                // When at DOT leaf the parent may be the postfix expr sibling chain; try previous leaf path
+                PsiElement prev = com.intellij.psi.util.PsiTreeUtil.prevLeaf(pos, true);
+                postfix = PsiTreeUtil.getParentOfType(prev, QilletniPostfixExpr.class);
+                if (postfix == null) return;
+            }
+            var primary = PsiTreeUtil.findChildOfType(postfix, QilletniPrimaryExpr.class);
+            if (primary == null) return;
+
+            System.out.println("[DEBUG_LOG][Completion] DotAfterExpression detected, primary=" + primary);
+
+            // Properties
+            addPropertiesForPrimary((QilletniFile) file, pos, primary, result);
+            // Methods (members + extensions)
+            addMethodsForPrimary((QilletniFile) file, pos, primary, result);
+        }
+    }
+
+    // Helper used by dot-after-expression provider
+    private static void addPropertiesForPrimary(QilletniFile file, PsiElement contextLeaf, PsiElement primary, CompletionResultSet result) {
+        String receiverType = inferReceiverTypeForCompletion(file, primary);
+        if (receiverType == null) return;
+        var entity = QilletniIndexFacade.findEntityByTypeName(contextLeaf.getProject(), file, receiverType);
+        if (entity == null) return;
+        for (var p : PsiTreeUtil.findChildrenOfType(entity, QilletniPropertyName.class)) {
+            result.addElement(LookupElementBuilder.create(p, p.getText())
+                    .withIcon(AllIcons.Nodes.ObjectTypeAttribute)
+                    .withTypeText(receiverType, true));
+        }
+    }
+
+    private static void addMethodsForPrimary(QilletniFile file, PsiElement contextLeaf, PsiElement primary, CompletionResultSet result) {
+        String receiverType = inferReceiverTypeForCompletion(file, primary);
+        System.out.println("[DEBUG_LOG][Completion] addMethodsForPrimary inferred receiverType=" + receiverType);
+        boolean typeReceiver = false;
+        if (receiverType == null) {
+            PsiElement headId = findDirectIdChild(primary);
+            if (headId != null) {
+                var ent = QilletniIndexFacade.findEntityByTypeName(contextLeaf.getProject(), file, headId.getText());
+                if (ent != null) {
+                    receiverType = headId.getText();
+                    typeReceiver = true;
+                }
+            }
+        }
+        if (receiverType == null) {
+            // Unknown type: offer ANY-based extension methods only
+            var anyExts = QilletniIndexFacade.listExtensionMethods(contextLeaf.getProject(), file, null);
+            for (var def : anyExts) createFunctionLookupElement(result, def);
+            return;
+        }
+        var entity = QilletniIndexFacade.findEntityByTypeName(contextLeaf.getProject(), file, receiverType);
+        if (entity != null) {
+            for (var def : PsiTreeUtil.findChildrenOfType(entity, QilletniFunctionDef.class)) {
+                boolean isStatic = isStaticFunctionDef(def);
+                if (typeReceiver) {
+                    if (!isStatic) continue;
+                } else {
+                    if (isStatic) continue;
+                }
+                createFunctionLookupElement(result, def);
+            }
+        }
+        if (!typeReceiver) {
+            var exts = QilletniIndexFacade.listExtensionMethods(contextLeaf.getProject(), file, receiverType);
+            for (var def : exts) createFunctionLookupElement(result, def);
+        }
+    }
 
     public QilletniCompletionContributor() {
         // Entities in "new Foo()" — be tolerant to intermediate PSI by using super-parent
@@ -103,6 +188,14 @@ public final class QilletniCompletionContributor extends CompletionContributor {
         extend(CompletionType.BASIC,
                 PlatformPatterns.psiElement(QilletniTypes.ID).withParent(QilletniLhsMember.class),
                 new LhsMemberPropertiesCompletionProvider());
+
+        // Dot-after-expression: trigger when caret is at dot or at error element right after a dot
+        extend(CompletionType.BASIC,
+                PlatformPatterns.psiElement().withElementType(TokenType.ERROR_ELEMENT),
+                new DotAfterExpressionCompletionProvider());
+        extend(CompletionType.BASIC,
+                PlatformPatterns.psiElement(QilletniTypes.DOT),
+                new DotAfterExpressionCompletionProvider());
 
         // Spotify inline completion: STRINGs in music expressions (Ctrl+Space only)
         extend(CompletionType.BASIC,
@@ -300,9 +393,9 @@ public final class QilletniCompletionContributor extends CompletionContributor {
     private static final class MemberPropertiesCompletionProvider extends CompletionProvider<CompletionParameters> {
         @Override
         protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
-            PsiElement idLeaf = parameters.getPosition();
-            var file = idLeaf.getContainingFile();
-            if (!(file instanceof QilletniFile)) return;
+            PsiElement idLeaf = com.intellij.codeInsight.completion.CompletionUtil.getOriginalOrSelf(parameters.getPosition());
+            var psiFile = idLeaf != null ? idLeaf.getContainingFile() : parameters.getOriginalFile();
+            if (!(psiFile instanceof QilletniFile file)) return;
 
             // Only offer properties if there's a preceding dot or we are under a postfix suffix
             boolean inSuffix = PsiTreeUtil.getParentOfType(idLeaf, QilletniPostfixSuffix.class) != null;
@@ -341,9 +434,9 @@ public final class QilletniCompletionContributor extends CompletionContributor {
     private static final class LhsMemberPropertiesCompletionProvider extends CompletionProvider<CompletionParameters> {
         @Override
         protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
-            PsiElement idLeaf = parameters.getPosition();
-            var file = idLeaf.getContainingFile();
-            if (!(file instanceof QilletniFile)) return;
+            PsiElement idLeaf = com.intellij.codeInsight.completion.CompletionUtil.getOriginalOrSelf(parameters.getPosition());
+            var psiFile = idLeaf != null ? idLeaf.getContainingFile() : parameters.getOriginalFile();
+            if (!(psiFile instanceof QilletniFile file)) return;
 
             var lhsMember = PsiTreeUtil.getParentOfType(idLeaf, QilletniLhsMember.class);
             if (lhsMember == null) return;
@@ -395,9 +488,9 @@ public final class QilletniCompletionContributor extends CompletionContributor {
     private static final class FallbackCompletionProvider extends CompletionProvider<CompletionParameters> {
         @Override
         protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
-            PsiElement idLeaf = parameters.getPosition();
-            var file = idLeaf.getContainingFile();
-            if (!(file instanceof QilletniFile)) return;
+            PsiElement idLeaf = com.intellij.codeInsight.completion.CompletionUtil.getOriginalOrSelf(parameters.getPosition());
+            var psiFile = idLeaf != null ? idLeaf.getContainingFile() : parameters.getOriginalFile();
+            if (!(psiFile instanceof QilletniFile file)) return;
 
             // Skip declaration name positions
             var parent = idLeaf.getParent();
@@ -436,6 +529,7 @@ public final class QilletniCompletionContributor extends CompletionContributor {
 
     // Common utility for method completions (postfix and LHS)
     private static void collectMethodCompletions(PsiElement idLeaf, CompletionResultSet result) {
+        System.out.println("[DEBUG_LOG][Completion] collectMethodCompletions start at=" + idLeaf + ", file=" + idLeaf.getContainingFile());
         var file = idLeaf.getContainingFile();
         if (!(file instanceof QilletniFile)) return;
 
@@ -445,6 +539,7 @@ public final class QilletniCompletionContributor extends CompletionContributor {
         PsiElement primary = null;
 
         boolean inSuffix = PsiTreeUtil.getParentOfType(idLeaf, QilletniPostfixSuffix.class) != null;
+        System.out.println("[DEBUG_LOG][Completion] inSuffix=" + inSuffix);
         if (!inSuffix) {
             // Not in a proper postfix member; allow LHS methods via lhs_core if needed later
             var lhsCore = PsiTreeUtil.getParentOfType(idLeaf, QilletniLhsCore.class);
@@ -457,41 +552,8 @@ public final class QilletniCompletionContributor extends CompletionContributor {
         }
         if (primary == null) return;
 
-        // Infer receiver type with fallback to variable declaration lookup
-        String receiverType = inferReceiverTypeForCompletion((QilletniFile) file, primary);
-        boolean typeReceiver = false;
-        if (receiverType == null) {
-            PsiElement headId = findDirectIdChild(primary);
-            if (headId != null) {
-                var ent = QilletniIndexFacade.findEntityByTypeName(idLeaf.getProject(), (QilletniFile) file, headId.getText());
-                if (ent != null) {
-                    receiverType = headId.getText();
-                    typeReceiver = true;
-                }
-            }
-        }
-        if (receiverType == null) return;
-
-        var entity = QilletniIndexFacade.findEntityByTypeName(idLeaf.getProject(), (QilletniFile) file, receiverType);
-        if (entity != null) {
-            for (var def : PsiTreeUtil.findChildrenOfType(entity, QilletniFunctionDef.class)) {
-                boolean isStatic = isStaticFunctionDef(def);
-                if (typeReceiver) {
-                    if (!isStatic) continue;
-                } else {
-                    if (isStatic) continue;
-                }
-                createFunctionLookupElement(result, def);
-            }
-        }
-
-        // Extension methods for instance receivers only
-        if (!typeReceiver) {
-            var exts = QilletniIndexFacade.listExtensionMethods(idLeaf.getProject(), (QilletniFile) file, receiverType);
-            for (var def : exts) {
-                createFunctionLookupElement(result, def);
-            }
-        }
+        // Delegate to shared implementation used by dot-after-expression provider
+        addMethodsForPrimary((QilletniFile) file, idLeaf, primary, result);
     }
 
     // Small helpers (duplicated minimal logic to avoid depending on private resolve utilities)
@@ -575,14 +637,46 @@ public final class QilletniCompletionContributor extends CompletionContributor {
         return null;
     }
 
+    private static Optional<String> getNativeTypeFromElementType(IElementType type) {
+        if (type == QilletniTypes.INT_TYPE) return Optional.of("int");
+        if (type == QilletniTypes.DOUBLE_TYPE) return Optional.of("double");
+        if (type == QilletniTypes.STRING_TYPE) return Optional.of("string");
+        if (type == QilletniTypes.BOOLEAN_TYPE) return Optional.of("boolean");
+        if (type == QilletniTypes.COLLECTION_TYPE) return Optional.of("collection");
+        if (type == QilletniTypes.SONG_TYPE) return Optional.of("song");
+        if (type == QilletniTypes.ALBUM_TYPE) return Optional.of("album");
+        if (type == QilletniTypes.WEIGHTS_KEYWORD) return Optional.of("weights");
+        return Optional.empty();
+    }
+
     // Infer a receiver type for completion: try static inference, then var-declaration lookup.
     private static String inferReceiverTypeForCompletion(QilletniFile file, PsiElement primary) {
         if (primary == null) return null;
+        // Prefer original PSI if available (completion copy may truncate)
+        PsiElement orig = com.intellij.codeInsight.completion.CompletionUtil.getOriginalOrSelf(primary);
+        if (orig != null) primary = orig;
         String t = dev.qilletni.intellij.resolve.QilletniTypeUtil.inferStaticType(primary);
         if (t != null) return t;
 
         // If primary is a function call, we can't infer without return type info.
         if (PsiTreeUtil.findChildOfType(primary, QilletniFunctionCall.class) != null) return null;
+
+        // Literal receiver fallback (ensure native-type extension methods on literals work)
+        // First check direct children, then recursively, to accommodate completion copies
+        for (PsiElement c = primary.getFirstChild(); c != null; c = c.getNextSibling()) {
+            if (c.getNode() == null) continue;
+            var stringOptional = getNativeTypeFromElementType(c.getNode().getElementType());
+            if (stringOptional.isPresent()) {
+                return stringOptional.get();
+            }
+        }
+        for (PsiElement e : PsiTreeUtil.findChildrenOfType(primary, PsiElement.class)) {
+            if (e.getNode() == null) continue;
+            var stringOptional = getNativeTypeFromElementType(e.getNode().getElementType());
+            if (stringOptional.isPresent()) {
+                return stringOptional.get();
+            }
+        }
 
         // Try resolving a variable used as primary and take its declared type.
         PsiElement idLeaf = findDirectIdChild(primary);
@@ -590,6 +684,10 @@ public final class QilletniCompletionContributor extends CompletionContributor {
             PsiElement declName = QilletniResolveUtil.resolveVariableUsage(idLeaf);
             if (declName instanceof QilletniVarName) {
                 return getVarDeclarationTypeFromVarName((QilletniVarName) declName);
+            }
+            if (declName instanceof QilletniParamName pName) {
+                var opt = dev.qilletni.intellij.resolve.QilletniParamTypeUtil.getParamType(pName);
+                if (opt.isPresent()) return opt.get();
             }
         }
         return null;

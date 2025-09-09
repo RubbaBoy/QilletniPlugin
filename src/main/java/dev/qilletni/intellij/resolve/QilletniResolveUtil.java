@@ -388,7 +388,11 @@ public final class QilletniResolveUtil {
                 if (declName instanceof QilletniVarName) {
                     return getVarDeclarationType((QilletniVarName) declName);
                 }
-                // Params have no declared types in grammar — cannot infer from them.
+                if (declName instanceof QilletniParamName pName) {
+                    // First parameter of an extension function acts as receiver: use its on-type if available.
+                    var opt = dev.qilletni.intellij.resolve.QilletniParamTypeUtil.getParamType(pName);
+                    if (opt.isPresent()) return opt.get();
+                }
             }
             return null;
         }

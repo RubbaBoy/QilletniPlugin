@@ -54,6 +54,7 @@ public final class QilletniIndexFacade {
 
         var tn = parseTypeName(rawTypeName);
         List<VirtualFile> files = candidateFilesForType(contextFile, tn);
+        System.out.println("[DEBUG_LOG][IndexFacade] findEntityByTypeName raw='" + rawTypeName + "' simple='" + tn.simple + "' candidate files=" + files);
         // Try stub index first
         if (!files.isEmpty()) {
             GlobalSearchScope scope = GlobalSearchScope.filesScope(project, new java.util.HashSet<>(files));
@@ -218,10 +219,64 @@ public final class QilletniIndexFacade {
     }
 
     // List all extension methods for a given receiver type visible from the given file
+    // Note: This consults the StubIndex first using a composite key Receiver#name. Since completions
+    // need the full list, we query per-file scope for ALL method names by scanning stubs via index keys
+    // available in the files' stub trees. Names may not match beyond source-root scope; behavior is
+    // constrained to files under 'qilletni-src' source roots (see QilletniImportUtil.filterToQilletniSrc).
+    // To change this behavior (e.g., include all source roots or libraries), adjust candidateFilesForType()
+    // and/or QilletniImportUtil.filterToQilletniSrc.
     public static List<QilletniFunctionDef> listExtensionMethods(Project project, QilletniFile contextFile, String rawReceiverType) {
-        if (rawReceiverType == null) return List.of();
+        System.out.println("[DEBUG_LOG][IndexFacade] listExtensionMethods receiverType=" + rawReceiverType + ", file=" + (contextFile != null ? contextFile.getVirtualFile() : null));
         Map<String, List<QilletniFunctionDef>> cache = CachedValuesManager.getManager(project).getCachedValue(contextFile, EXT_METHODS_BY_TYPE_CACHE_KEY, () ->
                 CachedValueProvider.Result.create(new HashMap<>(), PsiModificationTracker.MODIFICATION_COUNT), false);
+
+        // Unknown type: only suggest methods whose receiver is ANY
+        if (rawReceiverType == null || rawReceiverType.isBlank()) {
+            final String ANY = "ANY"; // Language rule: ANY-receiver methods apply to unknown types
+            List<QilletniFunctionDef> cachedAny = cache.get(ANY);
+            if (cachedAny != null) {
+                List<QilletniFunctionDef> valid = new ArrayList<>();
+                for (var f : cachedAny) if (f != null && f.isValid()) valid.add(f);
+                if (!valid.isEmpty()) return valid;
+            }
+            var tnAny = new TypeName(null, ANY);
+            List<VirtualFile> files = candidateFilesForType(contextFile, tnAny);
+            System.out.println("[DEBUG_LOG][IndexFacade] ANY path candidate files=" + files);
+            if (files.isEmpty() && contextFile.getVirtualFile() == null) {
+                // scratch/unsaved: include current context PSI only
+                List<QilletniFunctionDef> only = new ArrayList<>();
+                collectExtensionMethodDefs(tnAny, only, contextFile);
+                List<QilletniFunctionDef> imm = List.copyOf(only);
+                cache.put(ANY, imm);
+                return imm;
+            }
+            var scope = GlobalSearchScope.filesScope(project, new java.util.HashSet<>(files));
+            System.out.println("[DEBUG_LOG][IndexFacade] ANY path scope size=" + files.size());
+            // Consult the index using discovered function names within the constrained files.
+            java.util.Set<String> names = new java.util.LinkedHashSet<>();
+            for (VirtualFile vf : files) {
+                var psi = vf != null ? PsiManager.getInstance(project).findFile(vf) : null;
+                if (!(psi instanceof QilletniFile)) continue;
+                for (var fn : PsiTreeUtil.findChildrenOfType(psi, QilletniFunctionName.class)) {
+                    var id = fn.getId();
+                    if (id != null) names.add(id.getText());
+                }
+            }
+            List<QilletniFunctionDef> list = new ArrayList<>();
+            System.out.println("[DEBUG_LOG][IndexFacade] ANY path function names enumerated=" + names);
+            for (var nm : names) {
+                String key = dev.qilletni.intellij.index.QilletniIndexConstants.extMethodKey(ANY, nm);
+                if (key.isBlank()) continue;
+                System.out.println("[DEBUG_LOG][IndexFacade] ANY path querying index key=" + key);
+                var col = StubIndex.getElements(QilletniExtMethodIndex.KEY, key, project, scope, QilletniFunctionDef.class);
+                int c=0; for (var def : col) { if (def != null && def.isValid()) { list.add(def); c++; } }
+                System.out.println("[DEBUG_LOG][IndexFacade] ANY path index hits for key=" + key + " -> " + c);
+            }
+            List<QilletniFunctionDef> imm = List.copyOf(list);
+            cache.put(ANY, imm);
+            return imm;
+        }
+
         List<QilletniFunctionDef> cached = cache.get(rawReceiverType);
         if (cached != null) {
             List<QilletniFunctionDef> valid = new ArrayList<>();
@@ -230,17 +285,36 @@ public final class QilletniIndexFacade {
         }
 
         var tn = parseTypeName(rawReceiverType);
+        // We do not handle alias-qualified types here per requirement (focus on unqualified simple names)
         List<VirtualFile> files = candidateFilesForType(contextFile, tn);
+        System.out.println("[DEBUG_LOG][IndexFacade] typed path candidate files for '" + tn.simple + "' = " + files);
         List<QilletniFunctionDef> list = new ArrayList<>();
-        for (VirtualFile vf : files) {
-            var psi = vf != null ? PsiManager.getInstance(project).findFile(vf) : null;
-            if (!(psi instanceof QilletniFile)) continue;
-            collectExtensionMethodDefs(tn, list, psi);
+        if (!files.isEmpty()) {
+            // Consult the index by enumerating candidate function names from the constrained files,
+            // then querying QilletniExtMethodIndex with composite key Receiver#Name within the same scope.
+            var scope = GlobalSearchScope.filesScope(project, new java.util.HashSet<>(files));
+            java.util.Set<String> names = new java.util.LinkedHashSet<>();
+            for (VirtualFile vf : files) {
+                var psi = vf != null ? PsiManager.getInstance(project).findFile(vf) : null;
+                if (!(psi instanceof QilletniFile)) continue;
+                for (var fn : PsiTreeUtil.findChildrenOfType(psi, QilletniFunctionName.class)) {
+                    var id = fn.getId();
+                    if (id != null) names.add(id.getText());
+                }
+            }
+            System.out.println("[DEBUG_LOG][IndexFacade] typed path function names enumerated=" + names);
+            for (var nm : names) {
+                String key = dev.qilletni.intellij.index.QilletniIndexConstants.extMethodKey(tn.simple, nm);
+                if (key.isBlank()) continue;
+                System.out.println("[DEBUG_LOG][IndexFacade] typed path querying index key=" + key);
+                var col = StubIndex.getElements(QilletniExtMethodIndex.KEY, key, project, scope, QilletniFunctionDef.class);
+                int c=0; for (var def : col) { if (def != null && def.isValid()) { list.add(def); c++; } }
+                System.out.println("[DEBUG_LOG][IndexFacade] typed path index hits for key=" + key + " -> " + c);
+            }
         }
         if (contextFile.getVirtualFile() == null) {
             collectExtensionMethodDefs(tn, list, contextFile);
         }
-        // filter invalid PSI defensively
         List<QilletniFunctionDef> valid = new ArrayList<>();
         for (var f : list) if (f != null && f.isValid()) valid.add(f);
         List<QilletniFunctionDef> immutable = List.copyOf(valid);
@@ -252,8 +326,20 @@ public final class QilletniIndexFacade {
         for (var def : PsiTreeUtil.findChildrenOfType(psi, QilletniFunctionDef.class)) {
             var onType = PsiTreeUtil.findChildOfType(def, QilletniFunctionOnType.class);
             if (onType == null) continue;
-            PsiElement id = PsiTreeUtil.findChildOfType(onType, PsiElement.class);
-            if (id == null || id.getNode() == null || id.getNode().getElementType() != QilletniTypes.ID) continue;
+            // Find the LAST ID under the on-type to get the simple type name (ignoring 'on' token and qualifiers)
+            PsiElement id = null;
+            for (PsiElement c = onType.getFirstChild(); c != null; c = c.getNextSibling()) {
+                if (c.getNode() != null) {
+                    var t = c.getNode().getElementType();
+                    if (t == QilletniTypes.ID
+                            || t == QilletniTypes.ANY_TYPE || t == QilletniTypes.INT_TYPE || t == QilletniTypes.DOUBLE_TYPE
+                            || t == QilletniTypes.STRING_TYPE || t == QilletniTypes.BOOLEAN_TYPE || t == QilletniTypes.COLLECTION_TYPE
+                            || t == QilletniTypes.SONG_TYPE || t == QilletniTypes.ALBUM_TYPE || t == QilletniTypes.JAVA_TYPE) {
+                        id = c;
+                    }
+                }
+            }
+            if (id == null) continue;
             if (!id.getText().contentEquals(tn.simple)) continue;
             list.add(def);
         }

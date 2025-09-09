@@ -16,7 +16,7 @@ public final class QilletniIndexConstants {
     // Versions (bump when serialization/keying changes)
     public static final int ENTITY_INDEX_VERSION = 1;
     public static final int FUNCTION_INDEX_VERSION = 1;
-    public static final int EXT_METHOD_INDEX_VERSION = 1;
+    public static final int EXT_METHOD_INDEX_VERSION = 3;
 
     /**
      * Compose a composite key for extension methods in the form "Receiver#name".
