@@ -37,15 +37,18 @@ public final class LibraryRootsPathResolver implements QilletniLibraryPathResolv
         if (libName.isEmpty() || relPath.isEmpty()) return List.of();
 
         Set<VirtualFile> matches = new LinkedHashSet<>();
-        // 1) Synthetic libraries from all providers
+        // 1) Synthetic libraries from all providers (filter to QilletniSyntheticLibrary by name and search only source roots)
         for (var provider : AdditionalLibraryRootsProvider.EP_NAME.getExtensionList()) {
             try {
                 var libs = provider.getAdditionalProjectLibraries(project);
                 if (libs == null) continue;
                 final String relPathFinal = relPath;
                 libs.forEach(synth -> {
-                    collectFromRoots(matches, synth.getSourceRoots(), relPathFinal);
-                    collectFromRoots(matches, synth.getBinaryRoots(), relPathFinal);
+                    if (synth instanceof dev.qilletni.intellij.library.QilletniSyntheticLibrary qsl) {
+                        if (qsl.getName().equalsIgnoreCase(libName)) {
+                            collectFromRoots(matches, qsl.getSourceRoots(), relPathFinal);
+                        }
+                    }
                 });
             } catch (Throwable ignored) {
             }

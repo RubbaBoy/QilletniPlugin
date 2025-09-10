@@ -35,6 +35,17 @@ public final class QilletniSourceRootStartupActivity implements StartupActivity.
     @Override
     public void runActivity(@NotNull Project project) {
         detectAndPrompt(project);
+        // Ensure QLL libraries are visible under External Libraries on startup
+        try {
+            var settings = dev.qilletni.intellij.library.QilletniLibrariesSettings.getInstance();
+            if (settings != null && settings.getLibrariesRootPath() != null && !settings.getLibrariesRootPath().isBlank()) {
+                // Kick off a rescan (async). When it completes, QilletniLibraryManager will sync Project Libraries.
+                dev.qilletni.intellij.library.QilletniLibraryManager.getInstance().rescan();
+            } else {
+                // No configured path, but still sync to remove any old mirrored libraries.
+                dev.qilletni.intellij.library.QilletniProjectLibraries.syncProject(project);
+            }
+        } catch (Throwable ignored) {}
 
         // Listen for project roots changes (modules/content roots added or removed)
         project.getMessageBus().connect(project).subscribe(ProjectTopics.PROJECT_ROOTS, new ModuleRootListener() {
@@ -139,6 +150,17 @@ public final class QilletniSourceRootStartupActivity implements StartupActivity.
             if (Objects.equals(sf.getUrl(), url)) return; // already marked
         }
         targetEntry.addSourceFolder(url, false);
+        // Exclude nested IDE metadata directories inside source root to avoid index filter warnings
+        var ideaDir = dir.findChild(".idea");
+        if (ideaDir != null && ideaDir.isDirectory()) {
+            boolean alreadyExcluded = false;
+            for (var ex : targetEntry.getExcludeFolders()) {
+                if (java.util.Objects.equals(ex.getUrl(), ideaDir.getUrl())) { alreadyExcluded = true; break; }
+            }
+            if (!alreadyExcluded) {
+                targetEntry.addExcludeFolder(ideaDir.getUrl());
+            }
+        }
     }
 
     private static ContentEntry findOrCreateContentEntry(@NotNull ModifiableRootModel model, @NotNull VirtualFile fileOrDir) {

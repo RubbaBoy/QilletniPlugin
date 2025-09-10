@@ -165,7 +165,8 @@ public final class QilletniIndexFacade {
         return () -> {
             var files = new ArrayList<VirtualFile>();
             if (contextFile.getVirtualFile() != null) files.add(contextFile.getVirtualFile());
-            files.addAll(QilletniAliasResolver.getProjectLocalImports(contextFile));
+            // Include all imports (project + libraries + auto-imports)
+            files.addAll(QilletniAliasResolver.getAllImportedFiles(contextFile));
 
             var list = new ArrayList<QilletniEntityDef>();
             for (var vf : files) {
@@ -190,7 +191,8 @@ public final class QilletniIndexFacade {
         return () -> {
             var files = new ArrayList<VirtualFile>();
             if (contextFile.getVirtualFile() != null) files.add(contextFile.getVirtualFile());
-            files.addAll(QilletniAliasResolver.getProjectLocalImports(contextFile));
+            // Include all imports (project + libraries + auto-imports)
+            files.addAll(QilletniAliasResolver.getAllImportedFiles(contextFile));
 
             var list = new ArrayList<QilletniFunctionDef>();
             if (!files.isEmpty()) {
@@ -351,11 +353,12 @@ public final class QilletniIndexFacade {
             // Qualified name: restrict strictly to files imported under this alias
             res.addAll(QilletniAliasResolver.getFilesForQualifier(contextFile, tn.qualifier));
         } else {
-            // Unqualified: current file + project-local imports
+            // Unqualified: current file + ALL imported files (project + libraries + auto-imports)
             if (contextFile.getVirtualFile() != null) {
                 res.add(contextFile.getVirtualFile());
             }
-            res.addAll(QilletniAliasResolver.getProjectLocalImports(contextFile));
+            // Include transitive imported files from both project and libraries so symbols are available unqualified
+            res.addAll(QilletniAliasResolver.getAllImportedFiles(contextFile));
         }
         return res;
     }

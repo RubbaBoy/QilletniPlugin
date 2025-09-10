@@ -59,7 +59,9 @@
         </intentionAction>
         <codeInsight.lineMarkerProvider language="Qilletni" implementationClass="dev.qilletni.intellij.gutter.QilletniMusicLineMarkerProvider"/>
         <applicationConfigurable instance="dev.qilletni.intellij.settings.QilletniSpotifyConfigurable" id="dev.qilletni.intellij.settings.QilletniSpotifyConfigurable" displayName="Qilletni: Spotify" parentId="tools"/>
+        <applicationConfigurable instance="dev.qilletni.intellij.library.QilletniLibrariesConfigurable" id="dev.qilletni.intellij.settings.QilletniLibrariesConfigurable" displayName="Qilletni: Libraries" parentId="tools"/>
         <additionalLibraryRootsProvider implementation="dev.qilletni.intellij.library.QilletniAdditionalLibraryRootsProvider"/>
+        <applicationService serviceImplementation="dev.qilletni.intellij.library.QilletniLibrariesSettings"/>
         <stubIndex implementation="dev.qilletni.intellij.index.QilletniEntityIndex"/>
         <stubIndex implementation="dev.qilletni.intellij.index.QilletniFunctionIndex"/>
         <stubIndex implementation="dev.qilletni.intellij.index.QilletniExtMethodIndex"/>
@@ -91,6 +93,7 @@
                 language="Qilletni"
                 nameKey="qilletni.inlay.receiverType.name"
                 providerId="qilletni.receiverType"/>
+        <toolWindow id="Qilletni Libraries" factoryClass="dev.qilletni.intellij.library.ui.QilletniLibrariesToolWindowFactory" anchor="right" canCloseContents="false"/>
     </extensions>
 
     <actions>

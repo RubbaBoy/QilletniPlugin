@@ -21,6 +21,11 @@ public class QilletniExtensionReceiverParamInspection extends LocalInspectionToo
     }
 
     @Override
+    public @NotNull String getGroupDisplayName() {
+        return "Qilletni";
+    }
+
+    @Override
     public @NotNull String getDisplayName() {
         return "Extension function must declare receiver parameter";
     }

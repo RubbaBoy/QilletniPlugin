@@ -168,6 +168,11 @@ final class QilletniImportUtil {
                 if (vf != null) res.add(vf);
             }
         }
+        // Always-on auto-imports from installed libraries (application scope)
+        try {
+            var auto = dev.qilletni.intellij.library.QilletniLibraryManager.getInstance().getAllAutoImportFiles();
+            if (auto != null && !auto.isEmpty()) res.addAll(auto);
+        } catch (Throwable ignored) {}
         return res;
     }
 
@@ -260,9 +265,17 @@ final class QilletniImportUtil {
         for (var vf : files) {
             if (vf == null) continue;
             var root = fileIndex.getSourceRootForFile(vf);
-            if (root == null) continue;
-            if (!"qilletni-src".equals(root.getName())) continue;
-            if (module == null || allowedRootUrls.isEmpty() || allowedRootUrls.contains(root.getUrl())) {
+            boolean underQilletniSrc = false;
+            if (root != null) {
+                underQilletniSrc = "qilletni-src".equals(root.getName());
+            } else {
+                // For library files inside jars, SourceRoot may be null. Walk ancestors and accept if any folder is named 'qilletni-src'.
+                for (var cur = vf.getParent(); cur != null; cur = cur.getParent()) {
+                    if ("qilletni-src".equals(cur.getName())) { underQilletniSrc = true; root = cur; break; }
+                }
+            }
+            if (!underQilletniSrc) continue;
+            if (module == null || allowedRootUrls.isEmpty() || (root != null && allowedRootUrls.contains(root.getUrl()))) {
                 result.add(vf);
             }
         }
