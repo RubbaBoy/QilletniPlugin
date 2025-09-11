@@ -58,6 +58,7 @@
             <descriptionDirectoryName>dev.qilletni.intellij.intentions.QilletniInsertMusicIntention</descriptionDirectoryName>
         </intentionAction>
         <codeInsight.lineMarkerProvider language="Qilletni" implementationClass="dev.qilletni.intellij.gutter.QilletniMusicLineMarkerProvider"/>
+        <codeInsight.lineMarkerProvider language="Qilletni" implementationClass="dev.qilletni.intellij.gutter.QilletniNativeBindingLineMarkerProvider"/>
         <applicationConfigurable instance="dev.qilletni.intellij.settings.QilletniSpotifyConfigurable" id="dev.qilletni.intellij.settings.QilletniSpotifyConfigurable" displayName="Qilletni: Spotify" parentId="tools"/>
         <applicationConfigurable instance="dev.qilletni.intellij.library.QilletniLibrariesConfigurable" id="dev.qilletni.intellij.settings.QilletniLibrariesConfigurable" displayName="Qilletni: Libraries" parentId="tools"/>
         <additionalLibraryRootsProvider implementation="dev.qilletni.intellij.library.QilletniAdditionalLibraryRootsProvider"/>
@@ -101,6 +102,9 @@
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
             <keyboard-shortcut keymap="Default for XWin" first-keystroke="ctrl alt M"/>
             <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta alt M"/>
+        </action>
+        <action id="dev.qilletni.intellij.actions.QilletniResetLibraryCacheAction" class="dev.qilletni.intellij.actions.QilletniResetLibraryCacheAction" text="Qilletni: Reset Library Cache">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
         </action>
     </actions>
 </idea-plugin>

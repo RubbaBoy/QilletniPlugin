@@ -16,6 +16,8 @@ public record InstalledQllLibrary(
         String description,
         Path archivePath,
         VirtualFile srcRoot,
+        VirtualFile nativeJarRoot,
+        List<String> nativeClasses,
         List<String> autoImportFiles
 ) {
 }

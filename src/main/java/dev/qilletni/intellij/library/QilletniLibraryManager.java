@@ -23,6 +23,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -195,6 +196,26 @@ public final class QilletniLibraryManager {
                     srcRootVf = com.intellij.openapi.vfs.LocalFileSystem.getInstance().refreshAndFindFileByNioFile(srcDir);
                 }
 
+                // Ensure native.jar is available as a proper jar root by extracting it to cache and mounting it
+                com.intellij.openapi.vfs.VirtualFile nativeJarRootVf = null;
+                try {
+                    var nativeJarEntry = zip.getEntry("native.jar");
+                    if (nativeJarEntry != null && !nativeJarEntry.isDirectory()) {
+                        var outJar = cacheRoot.resolve("native.jar");
+                        // Write/overwrite cached jar (small file; can optimize later if needed)
+                        try (var in = zip.getInputStream(nativeJarEntry); var os = java.nio.file.Files.newOutputStream(outJar)) {
+                            in.transferTo(os);
+                        }
+                        var url = "jar://" + outJar.toAbsolutePath().toString().replace('\\', '/') + "!/";
+                        nativeJarRootVf = com.intellij.openapi.vfs.VirtualFileManager.getInstance().refreshAndFindFileByUrl(url);
+                        if (nativeJarRootVf != null) {
+                            var children = nativeJarRootVf.getChildren();
+                        }
+                    }
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
+
                 var installed = new InstalledQllLibrary(
                         info.name(),
                         info.version(),
@@ -202,6 +223,8 @@ public final class QilletniLibraryManager {
                         info.description(),
                         archivePath,
                         srcRootVf,
+                        nativeJarRootVf,
+                        info.nativeClasses() == null ? List.of() : List.copyOf(info.nativeClasses()),
                         info.autoImportFiles() == null ? List.of() : List.copyOf(info.autoImportFiles())
                 );
                 return new ScanItem(info.name(), archivePath, installed, errors);

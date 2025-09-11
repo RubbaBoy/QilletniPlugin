@@ -1,9 +1,9 @@
 package dev.qilletni.intellij.library;
 
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
+import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.roots.libraries.Library;
 import com.intellij.openapi.roots.libraries.LibraryTable;
 import com.intellij.openapi.roots.libraries.LibraryTablesRegistrar;
@@ -11,13 +11,13 @@ import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
- * Synchronizes IDEA Project Libraries to mirror installed Qilletni libraries for UI visibility under
- * External Libraries. These libraries are read-only mirrors of qilletni-src roots discovered by
- * QilletniLibraryManager. This is purely for presentation and indexing stability.
+ * Synchronizes real Project Libraries to mirror installed Qilletni libraries so that:
+ * - native.jar appears under Classes
+ * - qilletni-src appears under Sources
+ * Libraries are attached to all modules for visibility under External Libraries.
  */
 public final class QilletniProjectLibraries {
     private static final String PREFIX = "Qilletni: ";
@@ -44,7 +44,7 @@ public final class QilletniProjectLibraries {
     }
 
     /**
-     * Replace previously attached QilletniLib: libraries with the current set from the manager.
+     * Replace previously attached Qilletni: libraries with the current set from the manager.
      * Runs inside a write action.
      */
     public static void syncProject(@NotNull Project project) {
@@ -53,7 +53,7 @@ public final class QilletniProjectLibraries {
         var installed = mgr.getInstalled();
         WriteAction.run(() -> {
             LibraryTable table = LibraryTablesRegistrar.getInstance().getLibraryTable(project);
-            // Remove any previously-attached QilletniLib libraries to avoid duplicates
+            // Remove any previously-attached Qilletni libraries to avoid duplicates
             List<Library> toRemove = new ArrayList<>();
             for (Library lib : table.getLibraries()) {
                 var name = lib.getName();
@@ -71,23 +71,29 @@ public final class QilletniProjectLibraries {
                 }
             }
 
-            // Add a library per installed QLL with SOURCES = qilletni-src and attach to all modules
+            // Add a library per installed QLL with CLASSES = native.jar (if present), SOURCES = qilletni-src; attach to modules
             if (!installed.isEmpty()) {
                 List<Library> created = new ArrayList<>();
                 LibraryTable.ModifiableModel mod = table.getModifiableModel();
                 try {
                     for (var l : installed) {
                         VirtualFile src = l.srcRoot();
-                        if (src == null) continue; // metadata-only library; no sources to expose
+                        VirtualFile classesRoot = l.nativeJarRoot();
+                        if ((src == null || !src.isValid()) && (classesRoot == null || !classesRoot.isValid())) continue;
                         String ver = l.version() != null ? (" " + l.version().getVersionString()) : "";
                         String name = PREFIX + l.name() + ver;
                         Library lib = mod.createLibrary(name);
                         created.add(lib);
                         var model = lib.getModifiableModel();
                         try {
-                            model.addRoot(src, com.intellij.openapi.roots.OrderRootType.SOURCES);
-                            // Also add as CLASSES to ensure visibility in some IDE views
-                            model.addRoot(src, com.intellij.openapi.roots.OrderRootType.CLASSES);
+                            if (src != null && src.isValid()) {
+                                model.addRoot(src, OrderRootType.SOURCES);
+                                // Also add sources as CLASSES so they appear in External Libraries alongside native.jar
+                                model.addRoot(src, OrderRootType.CLASSES);
+                            }
+                            if (classesRoot != null && classesRoot.isValid()) {
+                                model.addRoot(classesRoot, OrderRootType.CLASSES);
+                            }
                         } finally {
                             model.commit();
                         }
