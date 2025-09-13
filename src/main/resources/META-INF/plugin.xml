@@ -21,6 +21,7 @@
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.java</depends>
+    <depends>org.jetbrains.plugins.yaml</depends>
 
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
@@ -36,6 +37,15 @@
         <colorSettingsPage implementation="dev.qilletni.intellij.QilletniColorSettingsPage"/>
 
         <lang.documentationProvider language="Qilletni" implementationClass="dev.qilletni.intellij.QilletniDocumentationProvider"/>
+
+        <psi.referenceContributor language="yaml" implementation="dev.qilletni.intellij.yaml.QilletniYamlReferenceContributor"/>
+        <completion.contributor language="yaml" implementationClass="dev.qilletni.intellij.yaml.QilletniYamlNativeClassCompletionContributor"/>
+        <localInspection language="yaml"
+                          groupPath="Qilletni"
+                          shortName="QilletniYamlNativeClassResolve"
+                          displayName="Unresolved native class"
+                          enabledByDefault="true"
+                          implementationClass="dev.qilletni.intellij.yaml.QilletniYamlNativeClassResolveInspection"/>
 
         <psi.referenceContributor language="Qilletni" implementation="dev.qilletni.intellij.references.QilletniReferenceContributor"/>
         <completion.contributor language="Qilletni" implementationClass="dev.qilletni.intellij.completion.QilletniCompletionContributor"/>
@@ -59,6 +69,10 @@
         </intentionAction>
         <codeInsight.lineMarkerProvider language="Qilletni" implementationClass="dev.qilletni.intellij.gutter.QilletniMusicLineMarkerProvider"/>
         <codeInsight.lineMarkerProvider language="Qilletni" implementationClass="dev.qilletni.intellij.gutter.QilletniNativeBindingLineMarkerProvider"/>
+        <codeInsight.lineMarkerProvider language="JAVA" implementationClass="dev.qilletni.intellij.gutter.QilletniJavaToQilletniLineMarkerProvider"/>
+        <codeInsight.lineMarkerProvider language="JAVA" implementationClass="dev.qilletni.intellij.gutter.QilletniJavaClassToYamlLineMarkerProvider"/>
+        <codeInsight.lineMarkerProvider language="yaml" implementationClass="dev.qilletni.intellij.gutter.QilletniYamlNativeClassLineMarkerProvider"/>
+        <gotoDeclarationHandler implementation="dev.qilletni.intellij.yaml.QilletniJavaClassToYamlGotoDeclarationHandler"/>
         <applicationConfigurable instance="dev.qilletni.intellij.settings.QilletniSpotifyConfigurable" id="dev.qilletni.intellij.settings.QilletniSpotifyConfigurable" displayName="Qilletni: Spotify" parentId="tools"/>
         <applicationConfigurable instance="dev.qilletni.intellij.library.QilletniLibrariesConfigurable" id="dev.qilletni.intellij.settings.QilletniLibrariesConfigurable" displayName="Qilletni: Libraries" parentId="tools"/>
         <additionalLibraryRootsProvider implementation="dev.qilletni.intellij.library.QilletniAdditionalLibraryRootsProvider"/>

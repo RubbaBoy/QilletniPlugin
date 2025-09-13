@@ -18,6 +18,7 @@ repositories {
 // Read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin.html
 dependencies {
     implementation("com.vladsch.flexmark:flexmark-all:0.64.8")
+    implementation("org.yaml:snakeyaml:2.2")
 
     implementation("se.michaelthelin.spotify:spotify-web-api-java:9.3.0") {
         exclude(group = "org.slf4j", module = "slf4j-api")
@@ -30,6 +31,7 @@ dependencies {
 
         // Add necessary plugin dependencies for compilation here, example:
         bundledPlugin("com.intellij.java")
+        bundledPlugin("org.jetbrains.plugins.yaml")
     }
 }
 

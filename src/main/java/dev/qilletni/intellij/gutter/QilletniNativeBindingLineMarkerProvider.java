@@ -31,7 +31,7 @@ public class QilletniNativeBindingLineMarkerProvider implements LineMarkerProvid
         List<PsiMethod> targets = QilletniNativeBindingResolver.resolveJavaTargets(def);
         if (targets.isEmpty()) return null;
 
-        Icon icon = AllIcons.Gutter.OverridingMethod;
+        Icon icon = AllIcons.Gutter.ImplementedMethod;
         var tooltip = buildTooltip(targets);
 
         return new LineMarkerInfo<>(
