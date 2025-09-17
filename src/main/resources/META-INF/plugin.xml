@@ -84,6 +84,8 @@
 
         <applicationService serviceImplementation="dev.qilletni.intellij.toolchain.QilletniToolchainSettings"/>
         <projectService serviceImplementation="dev.qilletni.intellij.toolchain.QilletniToolchainService"/>
+        
+        <newProjectWizard.languageGenerator implementation="dev.qilletni.intellij.project.QilletniLanguageNewProjectWizard"/>
 
         <configurationType implementation="dev.qilletni.intellij.runconfig.QilletniRunConfigurationType"/>
         <configurationType implementation="dev.qilletni.intellij.runconfig.QilletniBuildRunConfigurationType"/>
