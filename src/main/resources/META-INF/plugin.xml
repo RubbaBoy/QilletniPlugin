@@ -111,6 +111,7 @@
                 nameKey="qilletni.inlay.receiverType.name"
                 providerId="qilletni.receiverType"/>
         <toolWindow id="Qilletni Libraries" factoryClass="dev.qilletni.intellij.library.ui.QilletniLibrariesToolWindowFactory" anchor="right" canCloseContents="false"/>
+        <toolWindow id="Qilletni Logs" factoryClass="dev.qilletni.intellij.logs.QilletniLogsToolWindowFactory" anchor="bottom" canCloseContents="true"/>
     </extensions>
 
     <actions>

@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 
 public final class QilletniBuildCommandLineState extends JavaCommandLineState {
     private final QilletniBuildRunConfiguration cfg;
+    private QilletniToolchainLogServer logServer;
 
     public QilletniBuildCommandLineState(@NotNull ExecutionEnvironment env, @NotNull QilletniBuildRunConfiguration cfg) {
         super(env);
@@ -61,6 +62,16 @@ public final class QilletniBuildCommandLineState extends JavaCommandLineState {
             params.getProgramParametersList().addParametersString(cfg.args);
         }
 
+        // Prepare per-run toolchain log server and pass port (builds have no stdout; logs go to tool window)
+        try {
+            var title = "Logs: " + cfg.getName();
+            logServer = new QilletniToolchainLogServer(getEnvironment().getProject(), title);
+            params.getProgramParametersList().add("--log-port");
+            params.getProgramParametersList().add(Integer.toString(logServer.getPort()));
+        } catch (Exception e) {
+            throw new ExecutionException("Failed to start Qilletni log server", e);
+        }
+
         // Use targetPath as working directory; fall back to project base if needed
         String wd = (cfg.targetPath != null && !cfg.targetPath.isBlank())
                 ? cfg.targetPath
@@ -72,5 +83,15 @@ public final class QilletniBuildCommandLineState extends JavaCommandLineState {
         params.setCharset(StandardCharsets.UTF_8);
         params.setEnv(cfg.env);
         return params;
+    }
+
+    @Override
+    protected com.intellij.execution.process.OSProcessHandler startProcess() throws ExecutionException {
+        var handler = super.startProcess();
+        if (logServer != null) {
+            logServer.attachTo(handler);
+        }
+        // Do not show Run window for builds; logs are in the Qilletni Logs tool window only
+        return handler;
     }
 }

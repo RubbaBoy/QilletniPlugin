@@ -13,6 +13,8 @@ import java.nio.charset.StandardCharsets;
 
 public final class QilletniCommandLineState extends JavaCommandLineState {
     private final QilletniRunConfiguration cfg;
+    private QilletniToolchainLogServer logServer;
+    private final java.util.concurrent.atomic.AtomicBoolean sawProgramOutput = new java.util.concurrent.atomic.AtomicBoolean(false);
 
     public QilletniCommandLineState(@NotNull ExecutionEnvironment env, @NotNull QilletniRunConfiguration cfg) {
         super(env);
@@ -52,9 +54,56 @@ public final class QilletniCommandLineState extends JavaCommandLineState {
             params.getProgramParametersList().addParametersString(cfg.args);
         }
 
+        // Prepare per-run toolchain log server and pass port
+        try {
+            var title = "Logs: " + cfg.getName();
+            logServer = new QilletniToolchainLogServer(getEnvironment().getProject(), title);
+            params.getProgramParametersList().add("--log-port");
+            params.getProgramParametersList().add(Integer.toString(logServer.getPort()));
+        } catch (Exception e) {
+            throw new ExecutionException("Failed to start Qilletni log server", e);
+        }
+
         params.setWorkingDirectory(cfg.workingDir);
         params.setCharset(StandardCharsets.UTF_8);
         params.setEnv(cfg.env);
         return params;
+    }
+
+    @Override
+    protected com.intellij.execution.process.OSProcessHandler startProcess() throws ExecutionException {
+        var handler = super.startProcess();
+
+        // Start pumping toolchain logs into the Logs tool window
+        if (logServer != null) {
+            logServer.attachTo(handler);
+        }
+
+        // Show Run tool window only on first program output; otherwise print <no output> on termination
+        handler.addProcessListener(new com.intellij.execution.process.ProcessAdapter() {
+            private final java.util.concurrent.atomic.AtomicBoolean activated = new java.util.concurrent.atomic.AtomicBoolean(false);
+            @Override
+            public void onTextAvailable(@NotNull com.intellij.execution.process.ProcessEvent event, @NotNull com.intellij.openapi.util.Key outputType) {
+                if (sawProgramOutput.compareAndSet(false, true)) {
+                    // Activate Run tool window on first actual program output
+                    var project = getEnvironment().getProject();
+                    com.intellij.openapi.application.ApplicationManager.getApplication().invokeLater(() -> {
+                        var tw = com.intellij.openapi.wm.ToolWindowManager.getInstance(project).getToolWindow(com.intellij.openapi.wm.ToolWindowId.RUN);
+                        if (tw != null && activated.compareAndSet(false, true)) tw.activate(null, false, true);
+                    });
+                }
+            }
+
+            @Override
+            public void processTerminated(@NotNull com.intellij.execution.process.ProcessEvent event) {
+                if (!sawProgramOutput.get()) {
+                    var console = getConsoleBuilder().getConsole();
+                    com.intellij.openapi.application.ApplicationManager.getApplication().invokeLater(() ->
+                            console.print("<no output>\n", com.intellij.execution.ui.ConsoleViewContentType.SYSTEM_OUTPUT));
+                }
+            }
+        });
+
+        return handler;
     }
 }
