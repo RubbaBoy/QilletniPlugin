@@ -20,7 +20,8 @@ public interface QilletniLibraryPathResolver {
      * Resolve the given import path to one or more VirtualFiles.
      * @param project current project
      * @param rawImportPath the raw string path
+     * @param contextFile the importing file's VirtualFile (may be null)
      * @return list of resolved files (possibly empty). Never null.
      */
-    List<VirtualFile> resolve(Project project, String rawImportPath);
+    List<VirtualFile> resolve(Project project, String rawImportPath, VirtualFile contextFile);
 }

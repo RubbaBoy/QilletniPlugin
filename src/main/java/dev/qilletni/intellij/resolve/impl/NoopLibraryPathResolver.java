@@ -16,7 +16,7 @@ public final class NoopLibraryPathResolver implements QilletniLibraryPathResolve
     }
 
     @Override
-    public List<VirtualFile> resolve(Project project, String rawImportPath) {
+    public List<VirtualFile> resolve(Project project, String rawImportPath, VirtualFile contextFile) {
         return List.of();
     }
 }

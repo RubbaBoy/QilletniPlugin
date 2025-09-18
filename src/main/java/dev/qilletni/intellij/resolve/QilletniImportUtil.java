@@ -100,7 +100,7 @@ final class QilletniImportUtil {
 
     // Resolver chain for library-style imports (e.g., "libName:path/in/lib.ql").
     private static final List<QilletniLibraryPathResolver> LIB_RESOLVERS = List.of(
-            new dev.qilletni.intellij.resolve.impl.NoopLibraryPathResolver(),
+            new dev.qilletni.intellij.resolve.impl.SelfLibraryExamplesOnlyResolver(),
             new dev.qilletni.intellij.resolve.impl.LibraryRootsPathResolver()
     );
 
@@ -132,6 +132,7 @@ final class QilletniImportUtil {
     static Map<String, List<VirtualFile>> collectAliasedImports(QilletniFile file) {
         Map<String, List<VirtualFile>> res = new LinkedHashMap<>();
         Project project = file.getProject();
+        var contextVf = file.getVirtualFile();
         for (var imp : PsiTreeUtil.findChildrenOfType(file, QilletniImportFile.class)) {
             String raw = findStringLiteralText(imp);
             if (raw == null) continue;
@@ -139,7 +140,7 @@ final class QilletniImportUtil {
             if (alias == null) continue; // this method only collects aliased imports
 
             if (isLibraryPath(raw)) {
-                List<VirtualFile> files = resolveLibraryFiles(project, raw);
+                List<VirtualFile> files = resolveLibraryFiles(project, raw, contextVf);
                 if (!files.isEmpty()) {
                     res.computeIfAbsent(alias, k -> new ArrayList<>()).addAll(files);
                 }
@@ -156,13 +157,14 @@ final class QilletniImportUtil {
     private static List<VirtualFile> collectUnaliasedImports(QilletniFile file) {
         List<VirtualFile> res = new ArrayList<>();
         Project project = file.getProject();
+        var contextVf = file.getVirtualFile();
         for (var imp : PsiTreeUtil.findChildrenOfType(file, QilletniImportFile.class)) {
             String raw = findStringLiteralText(imp);
             if (raw == null) continue;
             String alias = findAlias(imp);
             if (alias != null) continue; // skip aliased; this method collects only unaliased
             if (isLibraryPath(raw)) {
-                res.addAll(resolveLibraryFiles(project, raw));
+                res.addAll(resolveLibraryFiles(project, raw, contextVf));
             } else {
                 var vf = resolveProjectLocalFile(file, raw);
                 if (vf != null) res.add(vf);
@@ -206,12 +208,15 @@ final class QilletniImportUtil {
         return colon > 0; // "name:path"
     }
 
-    private static List<VirtualFile> resolveLibraryFiles(Project project, String raw) {
+    private static List<VirtualFile> resolveLibraryFiles(Project project, String raw, VirtualFile contextFile) {
+        System.out.println("QilletniImportUtil.resolveLibraryFiles raw=" + raw);;
         if (project == null || raw == null) return List.of();
         for (var resolver : LIB_RESOLVERS) {
+            System.out.println("resolver = " + resolver);
             try {
                 if (resolver != null && resolver.supports(raw)) {
-                    List<VirtualFile> files = resolver.resolve(project, raw);
+                    List<VirtualFile> files = resolver.resolve(project, raw, contextFile);
+                    System.out.println("files = " + files);
                     return files != null ? files : List.of();
                 }
             } catch (Throwable ignored) {
@@ -245,39 +250,82 @@ final class QilletniImportUtil {
     }
 
     private static List<VirtualFile> filterToQilletniSrc(QilletniFile contextFile, List<VirtualFile> files) {
+        // Context-aware project-local filter per requirements:
+        // - If context is under 'qilletni-src': allow only files under any 'qilletni-src' source root of the same module.
+        // - If context is under 'examples': allow only files under the SAME 'examples' root as the context file (same root URL).
+        // - If context has no source root: allow only files in the same directory as the context file (same parent VirtualFile).
         if (files == null || files.isEmpty()) return List.of();
         var project = contextFile.getProject();
         var fileIndex = ProjectFileIndex.getInstance(project);
-        Module module = null;
         var ctxVf = contextFile.getVirtualFile();
+        var ctxRoot = ctxVf != null ? fileIndex.getSourceRootForFile(ctxVf) : null;
+        var ctxParent = ctxVf != null ? ctxVf.getParent() : null;
+
+        Module module = null;
         if (ctxVf != null) {
             module = ModuleUtilCore.findModuleForFile(ctxVf, project);
         }
+
+        // Build allowed root URLs per context
         Set<String> allowedRootUrls = new HashSet<>();
-        if (module != null) {
-            for (var root : ModuleRootManager.getInstance(module).getSourceRoots(false)) {
-                if (root != null && "qilletni-src".equals(root.getName())) {
-                    allowedRootUrls.add(root.getUrl());
+        String mode = null; // "qsrc", "examples", or "same-dir"
+        if (ctxRoot != null) {
+            var rootName = ctxRoot.getName();
+            if ("qilletni-src".equals(rootName)) {
+                mode = "qsrc";
+                if (module != null) {
+                    for (var root : ModuleRootManager.getInstance(module).getSourceRoots(false)) {
+                        if (root != null && "qilletni-src".equals(root.getName())) {
+                            allowedRootUrls.add(root.getUrl());
+                        }
+                    }
                 }
+            } else if ("examples".equals(rootName)) {
+                mode = "examples";
+                // Only the same examples root as the context
+                allowedRootUrls.add(ctxRoot.getUrl());
             }
         }
+        if (mode == null) {
+            mode = "same-dir";
+        }
+
         List<VirtualFile> result = new ArrayList<>();
         for (var vf : files) {
             if (vf == null) continue;
+            if ("same-dir".equals(mode)) {
+                if (ctxParent != null && vf.getParent() != null && ctxParent.equals(vf.getParent())) {
+                    result.add(vf);
+                }
+                continue;
+            }
+
+            // For mode qsrc/examples, verify the candidate's source root and module isolation
             var root = fileIndex.getSourceRootForFile(vf);
-            boolean underQilletniSrc = false;
+            String rootName = root != null ? root.getName() : null;
+            boolean ok = false;
             if (root != null) {
-                underQilletniSrc = "qilletni-src".equals(root.getName());
+                if ("qsrc".equals(mode)) {
+                    ok = "qilletni-src".equals(rootName) && (allowedRootUrls.isEmpty() || allowedRootUrls.contains(root.getUrl()));
+                } else if ("examples".equals(mode)) {
+                    ok = "examples".equals(rootName) && allowedRootUrls.contains(root.getUrl());
+                }
             } else {
-                // For library files inside jars, SourceRoot may be null. Walk ancestors and accept if any folder is named 'qilletni-src'.
+                // Fallback for cases where source root is null: walk ancestors to infer root name
                 for (var cur = vf.getParent(); cur != null; cur = cur.getParent()) {
-                    if ("qilletni-src".equals(cur.getName())) { underQilletniSrc = true; root = cur; break; }
+                    var name = cur.getName();
+                    if ("qsrc".equals(mode) && "qilletni-src".equals(name)) {
+                        var url = cur.getUrl();
+                        ok = allowedRootUrls.isEmpty() || allowedRootUrls.contains(url);
+                        break;
+                    } else if ("examples".equals(mode) && "examples".equals(name)) {
+                        var url = cur.getUrl();
+                        ok = allowedRootUrls.contains(url);
+                        break;
+                    }
                 }
             }
-            if (!underQilletniSrc) continue;
-            if (module == null || allowedRootUrls.isEmpty() || (root != null && allowedRootUrls.contains(root.getUrl()))) {
-                result.add(vf);
-            }
+            if (ok) result.add(vf);
         }
         return result;
     }

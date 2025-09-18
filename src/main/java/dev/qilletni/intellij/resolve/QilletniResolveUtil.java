@@ -2,11 +2,14 @@ package dev.qilletni.intellij.resolve;
 
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import dev.qilletni.intellij.QilletniFile;
 import dev.qilletni.intellij.psi.*;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -85,14 +88,30 @@ public final class QilletniResolveUtil {
     }
 
     public static PsiElement resolveTopLevelUses(PsiElement idElement, PsiFile file) {
-        for (var vName : PsiTreeUtil.findChildrenOfType(file, QilletniVarName.class)) {
-            System.out.println("vName = " + vName);
-            // Only consider top-level declarations (not inside any function/entity)
-            if (PsiTreeUtil.getParentOfType(vName, QilletniFunctionDef.class, false) == null
-                    && PsiTreeUtil.getParentOfType(vName, QilletniEntityDef.class, false) == null) {
-                if (textEquals(vName.getText(), idElement.getText())) {
-                    System.out.println("[resolveVariableUsage] resolved to top-level var: " + vName.getText());
-                    return vName;
+        // Search top-level variables in current file + ALL imported files (project-local + libraries)
+        List<PsiFile> filesToSearch = new ArrayList<>();
+        if (file instanceof QilletniFile qf) {
+            if (qf.getVirtualFile() != null) filesToSearch.add(qf);
+            var imported = QilletniAliasResolver.getAllImportedFiles(qf);
+            for (var vf : imported) {
+                var psi = vf != null ? PsiManager.getInstance(idElement.getProject()).findFile(vf) : null;
+                if (psi instanceof QilletniFile) filesToSearch.add(psi);
+            }
+            // If no virtual file (scratch/completion copy), still search context PSI
+            if (qf.getVirtualFile() == null) filesToSearch.add(qf);
+        } else {
+            filesToSearch.add(file);
+        }
+
+        for (var psi : filesToSearch) {
+            for (var vName : PsiTreeUtil.findChildrenOfType(psi, QilletniVarName.class)) {
+                // Only consider top-level declarations (not inside any function/entity)
+                if (PsiTreeUtil.getParentOfType(vName, QilletniFunctionDef.class, false) == null
+                        && PsiTreeUtil.getParentOfType(vName, QilletniEntityDef.class, false) == null) {
+                    if (textEquals(vName.getText(), idElement.getText())) {
+                        System.out.println("[resolveVariableUsage] resolved to top-level var: " + vName.getText());
+                        return vName;
+                    }
                 }
             }
         }
@@ -107,26 +126,37 @@ public final class QilletniResolveUtil {
             return null;
         }
         PsiFile file = idElement.getContainingFile();
-        if (!(file instanceof QilletniFile)) {
+        if (!(file instanceof QilletniFile qf)) {
             System.out.println("[resolveFunctionUsage] not a QilletniFile: " + file + " -> null");
             return null;
         }
         var name = idElement.getText();
         System.out.println("[resolveFunctionUsage] looking for function: " + name);
-        for (var def : PsiTreeUtil.findChildrenOfType(file, QilletniFunctionDef.class)) {
+
+        // Search top-level functions visible in scope (current file + ALL imports)
+        var defs = QilletniIndexFacade.listTopLevelFunctions(idElement.getProject(), qf);
+        for (var def : defs) {
             var onType = PsiTreeUtil.findChildOfType(def, QilletniFunctionOnType.class);
-            // Skip extension/receiver-bound methods
-            if (onType != null) {
-                System.out.println("[resolveFunctionUsage] skipping extension/receiver-bound function");
-                continue;
-            }
+            if (onType != null) continue; // skip extension methods
             var fName = PsiTreeUtil.findChildOfType(def, QilletniFunctionName.class);
-            System.out.println("[resolveFunctionUsage] candidate function name: " + (fName != null ? fName.getText() : "null"));
             if (fName != null && textEquals(name, fName.getText())) {
                 System.out.println("[resolveFunctionUsage] resolved to function: " + fName.getText());
                 return fName;
             }
         }
+
+        // Fallback: if no VirtualFile (scratch/completion copy), also scan context PSI directly
+        if (qf.getVirtualFile() == null) {
+            for (var def : PsiTreeUtil.findChildrenOfType(qf, QilletniFunctionDef.class)) {
+                var onType = PsiTreeUtil.findChildOfType(def, QilletniFunctionOnType.class);
+                if (onType != null) continue;
+                var fName = PsiTreeUtil.findChildOfType(def, QilletniFunctionName.class);
+                if (fName != null && textEquals(name, fName.getText())) {
+                    return fName;
+                }
+            }
+        }
+
         System.out.println("[resolveFunctionUsage] unresolved -> null");
         return null;
     }

@@ -26,7 +26,7 @@ public final class LibraryRootsPathResolver implements QilletniLibraryPathResolv
     }
 
     @Override
-    public List<VirtualFile> resolve(Project project, String rawImportPath) {
+    public List<VirtualFile> resolve(Project project, String rawImportPath, VirtualFile contextFile) {
         if (project == null || rawImportPath == null) return List.of();
         int colon = rawImportPath.indexOf(':');
         if (colon <= 0 || colon >= rawImportPath.length() - 1) return List.of();

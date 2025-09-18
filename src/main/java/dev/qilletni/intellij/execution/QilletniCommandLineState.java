@@ -39,6 +39,12 @@ public final class QilletniCommandLineState extends JavaCommandLineState {
         params.setMainClass("dev.qilletni.toolchain.QilletniToolchainApplication");
 
         params.getProgramParametersList().add("run");
+        // Inject optional local library before the target path
+        if (cfg.localLibrary != null && !cfg.localLibrary.isBlank()) {
+            var absoluteLib = java.nio.file.Path.of(cfg.localLibrary).toAbsolutePath().normalize().toString();
+            params.getProgramParametersList().add("--local-library");
+            params.getProgramParametersList().add(absoluteLib);
+        }
         params.getProgramParametersList().add(cfg.targetPath);
 
         // Program args: use ParametersList parsing to respect quotes and spaces.

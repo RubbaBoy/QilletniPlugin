@@ -29,6 +29,20 @@ public final class QilletniRunConfigurationProducer extends LazyRunConfiguration
         configuration.setName(file.getName());
         var basePath = context.getProject().getBasePath();
         configuration.workingDir = basePath != null ? basePath : "";
+
+        // Auto-populate Local library when target is under <projectBase>/examples/... (examples is a direct child of base)
+        if (basePath != null) {
+            try {
+                var base = java.nio.file.Path.of(basePath).toAbsolutePath().normalize();
+                var examples = base.resolve("examples");
+                var target = java.nio.file.Path.of(configuration.targetPath).toAbsolutePath().normalize();
+                if (target.startsWith(examples)) {
+                    configuration.localLibrary = base.toString();
+                }
+            } catch (Exception ignored) {
+                // If anything goes wrong resolving paths, leave localLibrary empty
+            }
+        }
         return true;
     }
 

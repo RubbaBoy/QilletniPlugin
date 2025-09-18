@@ -17,6 +17,7 @@ public final class QilletniRunConfigurationEditor extends SettingsEditor<Qilletn
     private TextFieldWithBrowseButton targetPath;
     private JBTextField args;
     private TextFieldWithBrowseButton workingDir;
+    private TextFieldWithBrowseButton localLibrary;
     private EnvironmentVariablesComponent envComponent;
 
     public QilletniRunConfigurationEditor(Project project) {
@@ -28,6 +29,7 @@ public final class QilletniRunConfigurationEditor extends SettingsEditor<Qilletn
         targetPath.setText(s.targetPath);
         args.setText(s.args);
         workingDir.setText(s.workingDir);
+        localLibrary.setText(s.localLibrary);
         envComponent.setEnvs(s.env);
     }
 
@@ -36,6 +38,7 @@ public final class QilletniRunConfigurationEditor extends SettingsEditor<Qilletn
         s.targetPath = targetPath.getText();
         s.args = args.getText();
         s.workingDir = workingDir.getText();
+        s.localLibrary = localLibrary.getText();
         s.env = envComponent.getEnvs();
     }
 
@@ -47,6 +50,8 @@ public final class QilletniRunConfigurationEditor extends SettingsEditor<Qilletn
         args = new JBTextField();
         workingDir = new TextFieldWithBrowseButton();
         workingDir.addBrowseFolderListener(project, FileChooserDescriptorFactory.createSingleFolderDescriptor().withTitle("Working Directory"));
+        localLibrary = new TextFieldWithBrowseButton();
+        localLibrary.addBrowseFolderListener(project, FileChooserDescriptorFactory.createSingleFolderDescriptor().withTitle("Local library"));
         envComponent = new EnvironmentVariablesComponent();
 
         var row = 0;
@@ -62,6 +67,9 @@ public final class QilletniRunConfigurationEditor extends SettingsEditor<Qilletn
 
         gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE; panel.add(new JLabel("Working directory:"), gbc);
         gbc.gridx = 1; gbc.weightx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; panel.add(workingDir, gbc); row++;
+
+        gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE; panel.add(new JLabel("Local library:"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; panel.add(localLibrary, gbc); row++;
 
         gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE; panel.add(new JLabel("Environment:"), gbc);
         gbc.gridx = 1; gbc.weightx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; panel.add(envComponent, gbc);

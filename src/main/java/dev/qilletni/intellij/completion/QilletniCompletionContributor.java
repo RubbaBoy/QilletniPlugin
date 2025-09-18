@@ -63,12 +63,9 @@ import java.util.stream.Collectors;
 import dev.qilletni.intellij.util.QilletniMusicPsiUtil;
 import dev.qilletni.intellij.spotify.QilletniSpotifyService;
 import dev.qilletni.intellij.spotify.QilletniSpotifyService.MusicChoice;
-import dev.qilletni.intellij.spotify.QilletniSpotifyService.MusicType;
 import dev.qilletni.intellij.spotify.auth.SpotifyAuthService;
 
 import javax.swing.KeyStroke;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Context-aware code completion for Qilletni:
@@ -82,8 +79,8 @@ public final class QilletniCompletionContributor extends CompletionContributor {
         @Override
         protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
             PsiElement pos = parameters.getPosition();
-            var file = pos.getContainingFile();
-            if (!(file instanceof QilletniFile)) return;
+            var origFile = parameters.getOriginalFile();
+            if (!(origFile instanceof QilletniFile qf)) return;
 
             // Determine if we are at ".<caret>" position
             boolean atErrorAfterDot = pos.getNode() != null && pos.getNode().getElementType() == TokenType.ERROR_ELEMENT && hasPrecedingDot(pos);
@@ -104,9 +101,9 @@ public final class QilletniCompletionContributor extends CompletionContributor {
             System.out.println("[DEBUG_LOG][Completion] DotAfterExpression detected, primary=" + primary);
 
             // Properties
-            addPropertiesForPrimary((QilletniFile) file, pos, primary, result);
+            addPropertiesForPrimary(qf, pos, primary, result);
             // Methods (members + extensions)
-            addMethodsForPrimary((QilletniFile) file, pos, primary, result);
+            addMethodsForPrimary(qf, pos, primary, result);
         }
     }
 
@@ -165,14 +162,14 @@ public final class QilletniCompletionContributor extends CompletionContributor {
         // Entities in "new Foo()" — be tolerant to intermediate PSI by using super-parent
         extend(CompletionType.BASIC,
                 PlatformPatterns.psiElement(QilletniTypes.ID).withSuperParent(2, QilletniEntityInitialize.class),
-                new EntitiesCompletionProvider());
+                new EntitiesCompletionProvider("Basic ID entity init"));
 
         // Entities at head of a static call: ID under PrimaryExpr with super PostfixExpr
         extend(CompletionType.BASIC,
                 PlatformPatterns.psiElement(QilletniTypes.ID)
                         .withParent(QilletniPrimaryExpr.class)
                         .withSuperParent(2, QilletniPostfixExpr.class),
-                new EntitiesCompletionProvider());
+                new EntitiesCompletionProvider("Static call entity init"));
 
         // Fallback provider: on any ID, compute context and offer entities/members/functions as appropriate
         extend(CompletionType.BASIC,
@@ -215,17 +212,23 @@ public final class QilletniCompletionContributor extends CompletionContributor {
     // --- Providers ---
 
     private static final class EntitiesCompletionProvider extends CompletionProvider<CompletionParameters> {
+        private final String label;
+
+        private EntitiesCompletionProvider(String label) {
+            this.label = label;
+        }
+
         @Override
         protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
             System.out.println("========= EntitiesCompletionProvider invoked");
             PsiElement el = parameters.getPosition();
-            var file = el.getContainingFile();
-            if (!(file instanceof QilletniFile)) {
+            var origPsiFile = parameters.getOriginalFile();
+            if (!(origPsiFile instanceof QilletniFile qf)) {
                 return;
             }
-            var project = el.getProject();
+            var project = qf.getProject();
 
-            var entities = QilletniIndexFacade.listEntitiesInScope(project, (QilletniFile) file);
+            var entities = QilletniIndexFacade.listEntitiesInScope(project, qf);
             for (var e : entities) {
                 var nameEl = PsiTreeUtil.findChildOfType(e, QilletniEntityName.class);
                 if (nameEl == null) continue;
@@ -472,12 +475,14 @@ public final class QilletniCompletionContributor extends CompletionContributor {
     private static final class TopLevelFunctionsCompletionProvider extends CompletionProvider<CompletionParameters> {
         @Override
         protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
-            PsiElement idLeaf = parameters.getPosition();
-            var file = idLeaf.getContainingFile();
-            if (!(file instanceof QilletniFile)) return;
-            var project = idLeaf.getProject();
+            System.out.println("========= TopLevelFunctionsCompletionProvider invoked");
+            var origFile = parameters.getOriginalFile();
+            if (!(origFile instanceof QilletniFile qf)) return;
+            var project = qf.getProject();
 
-            var functions = QilletniIndexFacade.listTopLevelFunctions(project, (QilletniFile) file);
+            System.out.println("\t\tlisting toplevel!");
+
+            var functions = QilletniIndexFacade.listTopLevelFunctions(project, qf);
             for (var f : functions) {
                 createFunctionLookupElement(result, f);
             }
@@ -523,7 +528,7 @@ public final class QilletniCompletionContributor extends CompletionContributor {
             // 3) Expression head (no chain yet): suggest top-level variables, top-level functions, and entities
             addTopLevelVariableCompletions((QilletniFile) file, result);
             new TopLevelFunctionsCompletionProvider().addCompletions(parameters, context, result);
-            new EntitiesCompletionProvider().addCompletions(parameters, context, result);
+            new EntitiesCompletionProvider("fallback completions").addCompletions(parameters, context, result);
         }
     }
 
