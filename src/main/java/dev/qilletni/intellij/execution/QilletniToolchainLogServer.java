@@ -84,14 +84,21 @@ public final class QilletniToolchainLogServer {
 
     public void attachTo(ProcessHandler handler) {
         if (!attached.compareAndSet(false, true)) return;
-        // Close server on process end
+        // Ensure resources are disposed with the project as a safety net
+        com.intellij.openapi.util.Disposer.register(project, new com.intellij.openapi.Disposable() {
+            @Override
+            public void dispose() {
+                closeSilently();
+            }
+        });
+        // Close server on process end as well
         handler.addProcessListener(new ProcessAdapter() {
             @Override public void processTerminated(ProcessEvent event) {
                 closeSilently();
             }
         });
-        // Start accept loop (single connection per run)
-        Thread.startVirtualThread(() -> acceptOnceAndPump(handler));
+        // Start accept loop (single connection per run) on pooled thread for IDE compatibility
+        com.intellij.util.concurrency.AppExecutorUtil.getAppExecutorService().execute(() -> acceptOnceAndPump(handler));
     }
 
     private void acceptOnceAndPump(ProcessHandler handler) {
@@ -225,10 +232,10 @@ public final class QilletniToolchainLogServer {
     private static ConsoleViewContentType levelContentType(String lvl) {
         if (lvl == null) return ConsoleViewContentType.NORMAL_OUTPUT;
         return switch (lvl) {
-            case "TRACE" -> LVL_TRACE;
-            case "DEBUG" -> LVL_DEBUG;
-            case "INFO" -> LVL_INFO;
-            case "WARN" -> LVL_WARN;
+            case "TRACE" -> ConsoleViewContentType.LOG_DEBUG_OUTPUT; // use debug style for trace
+            case "DEBUG" -> ConsoleViewContentType.LOG_DEBUG_OUTPUT;
+            case "INFO" -> ConsoleViewContentType.LOG_INFO_OUTPUT;
+            case "WARN" -> ConsoleViewContentType.LOG_WARNING_OUTPUT;
             default -> ConsoleViewContentType.NORMAL_OUTPUT;
         };
     }
@@ -250,11 +257,9 @@ public final class QilletniToolchainLogServer {
     private static ConsoleView findOrCreateConsole(Project project, String title) {
         var tw = ToolWindowManager.getInstance(project).getToolWindow("Qilletni Logs");
         ConsoleView existing = null;
-        Content existingContent = null;
         if (tw != null) {
             for (var c : tw.getContentManager().getContents()) {
                 if (title.equals(c.getDisplayName())) {
-                    existingContent = c;
                     existing = c.getUserData(CONSOLE_KEY);
                     break;
                 }
@@ -265,7 +270,24 @@ public final class QilletniToolchainLogServer {
             return existing;
         }
         var console = new ConsoleViewImpl(project, false);
-        var content = ContentFactory.getInstance().createContent(console.getComponent(), title, false);
+        // Add standard console filters
+        console.addMessageFilter(new QilletniOutputHyperlinkFilter(project));
+        try {
+            // Best-effort: built-in exception hyperlinking
+            console.addMessageFilter(new com.intellij.execution.filters.ExceptionFilter(
+                    com.intellij.psi.search.GlobalSearchScope.allScope(project)));
+        } catch (Throwable ignored) { }
+        // Build a panel with console toolbar actions
+        var actions = console.createConsoleActions();
+        var group = new com.intellij.openapi.actionSystem.DefaultActionGroup(actions);
+        var toolbar = com.intellij.openapi.actionSystem.ActionManager.getInstance()
+                .createActionToolbar("QilletniLogsConsole", group, false);
+        var panel = new com.intellij.openapi.ui.SimpleToolWindowPanel(false, true);
+        toolbar.setTargetComponent(console.getComponent());
+        panel.setToolbar(toolbar.getComponent());
+        panel.setContent(console.getComponent());
+
+        var content = ContentFactory.getInstance().createContent(panel, title, false);
         content.putUserData(CONSOLE_KEY, console);
         if (tw != null) tw.getContentManager().addContent(content);
         return console;

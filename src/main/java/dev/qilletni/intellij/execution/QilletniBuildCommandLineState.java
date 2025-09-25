@@ -13,7 +13,7 @@ import java.nio.charset.StandardCharsets;
 
 public final class QilletniBuildCommandLineState extends JavaCommandLineState {
     private final QilletniBuildRunConfiguration cfg;
-    private QilletniToolchainLogServer logServer;
+    private QilletniBuildViewLogServer logServer;
 
     public QilletniBuildCommandLineState(@NotNull ExecutionEnvironment env, @NotNull QilletniBuildRunConfiguration cfg) {
         super(env);
@@ -62,10 +62,15 @@ public final class QilletniBuildCommandLineState extends JavaCommandLineState {
             params.getProgramParametersList().addParametersString(cfg.args);
         }
 
-        // Prepare per-run toolchain log server and pass port (builds have no stdout; logs go to tool window)
+        // Determine working directory early for Build View descriptor
+        String wd = (cfg.targetPath != null && !cfg.targetPath.isBlank())
+                ? cfg.targetPath
+                : getEnvironment().getProject().getBasePath();
+
+        // Prepare per-run toolchain log server and pass port (builds have no stdout; logs go to Build View)
         try {
-            var title = "Logs: " + cfg.getName();
-            logServer = new QilletniToolchainLogServer(getEnvironment().getProject(), title);
+            var title = "Building Library";
+            logServer = new QilletniBuildViewLogServer(getEnvironment().getProject(), title, wd != null ? wd : "");
             params.getProgramParametersList().add("--log-port");
             params.getProgramParametersList().add(Integer.toString(logServer.getPort()));
         } catch (Exception e) {
@@ -73,9 +78,6 @@ public final class QilletniBuildCommandLineState extends JavaCommandLineState {
         }
 
         // Use targetPath as working directory; fall back to project base if needed
-        String wd = (cfg.targetPath != null && !cfg.targetPath.isBlank())
-                ? cfg.targetPath
-                : getEnvironment().getProject().getBasePath();
         if (wd != null && !wd.isBlank()) {
             params.setWorkingDirectory(wd);
         }
