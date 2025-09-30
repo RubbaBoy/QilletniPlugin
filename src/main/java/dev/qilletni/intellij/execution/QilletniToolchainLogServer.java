@@ -4,10 +4,10 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.intellij.execution.impl.ConsoleViewImpl;
-import com.intellij.execution.process.AnsiEscapeDecoder;
 import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.execution.process.ProcessEvent;
 import com.intellij.execution.process.ProcessHandler;
+import com.intellij.execution.process.ProcessOutputTypes;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.openapi.application.ApplicationManager;
@@ -58,6 +58,7 @@ public final class QilletniToolchainLogServer {
     private final ConsoleView console;
     private final String title;
     private final AtomicBoolean attached = new AtomicBoolean(false);
+    private final com.intellij.execution.process.AnsiEscapeDecoder ansiDecoder = new com.intellij.execution.process.AnsiEscapeDecoder();
 
     public QilletniToolchainLogServer(Project project, @NlsSafe String tabTitle) throws IOException {
         this.project = project;
@@ -111,7 +112,6 @@ public final class QilletniToolchainLogServer {
                         .onUnmappableCharacter(CodingErrorAction.REPLACE);
                 var cbuf = CharBuffer.allocate(8192);
                 var lineBuf = new StringBuilder(8192);
-                var ansi = new AnsiEscapeDecoder();
                 while (!handler.isProcessTerminated()) {
                     var n = channel.read(buf);
                     if (n == -1) break;
@@ -130,10 +130,10 @@ public final class QilletniToolchainLogServer {
                     while ((nl = lineBuf.indexOf("\n")) >= 0) {
                         var line = lineBuf.substring(0, nl);
                         lineBuf.delete(0, nl + 1);
-                        handleJsonLine(line, ansi);
+                        handleJsonLine(line);
                     }
                 }
-                if (lineBuf.length() > 0) handleJsonLine(lineBuf.toString(), ansi);
+                if (lineBuf.length() > 0) handleJsonLine(lineBuf.toString());
             }
         } catch (IOException ignored) {
         } finally {
@@ -141,7 +141,7 @@ public final class QilletniToolchainLogServer {
         }
     }
 
-    private void handleJsonLine(String line, AnsiEscapeDecoder ansi) {
+    private void handleJsonLine(String line) {
         try {
             var obj = JsonParser.parseString(line).getAsJsonObject();
             printFormatted(obj);
@@ -178,36 +178,38 @@ public final class QilletniToolchainLogServer {
         var level = o.has("level") ? safeString(o.get("level")) : "?";
         var msg = o.has("message") ? safeString(o.get("message")) : "";
 
-        boolean isError = "ERROR".equals(level) || "FATAL".equals(level);
-        var prefix = new StringBuilder(128)
+        // Format the entire line as a single string
+        var formattedLine = new StringBuilder(512)
                 .append('[').append(time).append("] [")
                 .append(thread).append('/')
-                .toString();
-        var suffix = new StringBuilder(256)
+                .append(level)
                 .append("]: ")
                 .append(msg)
                 .append('\n')
                 .toString();
 
-        ApplicationManager.getApplication().invokeLater(() -> {
-            var lineType = isError ? ConsoleViewContentType.ERROR_OUTPUT : ConsoleViewContentType.NORMAL_OUTPUT;
-            console.print(prefix, lineType);
-            if (isError) {
-                console.print(level, ConsoleViewContentType.ERROR_OUTPUT);
-            } else {
-                console.print(level, levelContentType(level));
-            }
-            console.print(suffix, lineType);
+        // Colorize the entire line based on level
+        var coloredLine = AnsiColorizer.colorize(level, formattedLine);
 
-            // Throwable rendering
+        ApplicationManager.getApplication().invokeLater(() -> {
+            // Process ANSI codes and print with proper colors
+            printWithAnsi(coloredLine);
+
+            // Throwable rendering (also colorized with ANSI)
             if (o.has("thrown") && o.get("thrown").isJsonObject()) {
                 var th = o.getAsJsonObject("thrown");
                 var name = th.has("name") ? safeString(th.get("name")) : "Exception";
                 var tmsg = th.has("localizedMessage") ? safeString(th.get("localizedMessage")) : (th.has("message") ? safeString(th.get("message")) : "");
-                var header = new StringBuilder().append(name);
-                if (!tmsg.isEmpty()) header.append(": ").append(tmsg);
-                header.append('\n');
-                console.print(header.toString(), lineType);
+                
+                // Build exception header
+                var exHeader = new StringBuilder().append(name);
+                if (!tmsg.isEmpty()) exHeader.append(": ").append(tmsg);
+                exHeader.append('\n');
+                
+                // Colorize and print with ANSI processing
+                printWithAnsi(AnsiColorizer.colorize(level, exHeader.toString()));
+                
+                // Stack trace lines
                 if (th.has("extendedStackTrace") && th.get("extendedStackTrace").isJsonArray()) {
                     for (JsonElement el : th.getAsJsonArray("extendedStackTrace")) {
                         if (!el.isJsonObject()) continue;
@@ -216,33 +218,63 @@ public final class QilletniToolchainLogServer {
                         var mth = e.has("method") ? safeString(e.get("method")) : "?";
                         var file = e.has("file") ? safeString(e.get("file")) : "Unknown Source";
                         int line = e.has("line") ? e.get("line").getAsInt() : -1;
-                        var sb = new StringBuilder()
+                        var frameLine = new StringBuilder()
                                 .append('\t').append("at ")
                                 .append(cls).append('.').append(mth)
                                 .append('(').append(file);
-                        if (line >= 0) sb.append(':').append(line);
-                        sb.append(')').append('\n');
-                        console.print(sb.toString(), lineType);
+                        if (line >= 0) frameLine.append(':').append(line);
+                        frameLine.append(')').append('\n');
+                        
+                        printWithAnsi(AnsiColorizer.colorize(level, frameLine.toString()));
                     }
                 }
             }
         });
     }
 
-    private static ConsoleViewContentType levelContentType(String lvl) {
-        if (lvl == null) return ConsoleViewContentType.NORMAL_OUTPUT;
-        return switch (lvl) {
-            case "TRACE" -> ConsoleViewContentType.LOG_DEBUG_OUTPUT; // use debug style for trace
-            case "DEBUG" -> ConsoleViewContentType.LOG_DEBUG_OUTPUT;
-            case "INFO" -> ConsoleViewContentType.LOG_INFO_OUTPUT;
-            case "WARN" -> ConsoleViewContentType.LOG_WARNING_OUTPUT;
-            default -> ConsoleViewContentType.NORMAL_OUTPUT;
-        };
-    }
-
-
     private static String safeString(JsonElement e) {
         return e == null || e.isJsonNull() ? "" : e.getAsString();
+    }
+
+    /**
+     * Prints text with ANSI escape code processing.
+     * The AnsiEscapeDecoder parses ANSI codes and calls the acceptor with colored text chunks.
+     */
+    private void printWithAnsi(String text) {
+        ansiDecoder.escapeText(text, ProcessOutputTypes.STDOUT, new com.intellij.execution.process.AnsiEscapeDecoder.ColoredTextAcceptor() {
+            @Override
+            public void coloredTextAvailable(String chunk, com.intellij.openapi.util.Key outputType) {
+                // Map ANSI color codes to ConsoleViewContentType
+                ConsoleViewContentType contentType = ansiOutputTypeToContentType(outputType);
+                console.print(chunk, contentType);
+            }
+        });
+    }
+
+    /**
+     * Maps AnsiEscapeDecoder output types (which encode ANSI colors) to ConsoleViewContentType.
+     * AnsiEscapeDecoder attaches TextAttributes to Keys to encode color information.
+     */
+    private static ConsoleViewContentType ansiOutputTypeToContentType(com.intellij.openapi.util.Key outputType) {
+        // Check for stderr (errors)
+        if (ProcessOutputTypes.STDERR.equals(outputType)) {
+            return ConsoleViewContentType.ERROR_OUTPUT;
+        }
+        
+        // AnsiEscapeDecoder stores TextAttributes in the Key's user data
+        // Try to extract TextAttributes from the Key
+        var attributes = ConsoleViewContentType.getConsoleViewType(outputType);
+        if (attributes != null) {
+            return attributes;
+        }
+        
+        // Fallback: check if this is a standard ProcessOutputTypes constant
+        if (ProcessOutputTypes.SYSTEM.equals(outputType)) {
+            return ConsoleViewContentType.SYSTEM_OUTPUT;
+        }
+        
+        // Default to normal output for stdout and unknown types
+        return ConsoleViewContentType.NORMAL_OUTPUT;
     }
 
     private static String defaultTabTitle() {
@@ -289,7 +321,10 @@ public final class QilletniToolchainLogServer {
 
         var content = ContentFactory.getInstance().createContent(panel, title, false);
         content.putUserData(CONSOLE_KEY, console);
-        if (tw != null) tw.getContentManager().addContent(content);
+        if (tw != null) {
+            tw.getContentManager().addContent(content);
+            tw.getContentManager().setSelectedContent(content);
+        }
         return console;
     }
 }

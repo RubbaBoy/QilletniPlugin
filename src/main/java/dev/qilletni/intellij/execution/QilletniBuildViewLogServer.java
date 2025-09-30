@@ -7,7 +7,6 @@ import com.intellij.build.BuildViewManager;
 import com.intellij.build.DefaultBuildDescriptor;
 import com.intellij.build.events.MessageEvent;
 import com.intellij.build.events.impl.FinishBuildEventImpl;
-import com.intellij.build.events.impl.MessageEventImpl;
 import com.intellij.build.events.impl.OutputBuildEventImpl;
 import com.intellij.build.events.impl.StartBuildEventImpl;
 import com.intellij.build.events.impl.SuccessResultImpl;
@@ -119,7 +118,7 @@ public final class QilletniBuildViewLogServer {
             publishFormatted(obj);
         } catch (Throwable t) {
             // Publish raw as info with parser note under the single task (as MessageEvent for highlighting)
-            publishMessage(MessageEvent.Kind.INFO, "[parser] malformed JSON: " + line, null);
+            publishMessage(MessageEvent.Kind.INFO, "INFO", "[parser] malformed JSON: " + line, null);
         }
     }
 
@@ -159,22 +158,25 @@ public final class QilletniBuildViewLogServer {
             }
             details = sb.toString();
         }
-        publishMessage(kind, text, details);
+        publishMessage(kind, level, text, details);
     }
 
-    private void publishMessage(MessageEvent.Kind kind, String message, String details) {
+    private void publishMessage(MessageEvent.Kind kind, String level, String message, String details) {
         ApplicationManager.getApplication().invokeLater(() -> {
             var view = project.getService(BuildViewManager.class);
             if (view == null) return;
-            // Stream under the single step as plain output; use stderr for ERROR/FATAL to render red
+            
+            // Wrap message and details with ANSI color codes based on level
+            String coloredMessage = AnsiColorizer.colorize(level, message);
             boolean stdOut = kind != MessageEvent.Kind.ERROR;
-            view.onEvent(buildId, new OutputBuildEventImpl(buildId, message + "\n", stdOut));
+            view.onEvent(buildId, new OutputBuildEventImpl(buildId, coloredMessage + "\n", stdOut));
+            
             if (details != null && !details.isEmpty()) {
-                // Emit details (e.g., stacktrace) as additional lines under the same node
                 var lines = details.split("\r?\n", -1);
                 for (var line : lines) {
                     if (line.isEmpty()) continue;
-                    view.onEvent(buildId, new OutputBuildEventImpl(buildId, line + "\n", stdOut));
+                    String coloredDetail = AnsiColorizer.colorize(level, line);
+                    view.onEvent(buildId, new OutputBuildEventImpl(buildId, coloredDetail + "\n", stdOut));
                 }
             }
         });

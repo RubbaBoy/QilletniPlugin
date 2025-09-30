@@ -13,7 +13,7 @@ import java.nio.charset.StandardCharsets;
 
 public final class QilletniCommandLineState extends JavaCommandLineState {
     private final QilletniRunConfiguration cfg;
-    private QilletniToolchainLogServer logServer;
+    private QilletniBuildViewLogServer logServer;
     private final java.util.concurrent.atomic.AtomicBoolean sawProgramOutput = new java.util.concurrent.atomic.AtomicBoolean(false);
 
     public QilletniCommandLineState(@NotNull ExecutionEnvironment env, @NotNull QilletniRunConfiguration cfg) {
@@ -54,10 +54,13 @@ public final class QilletniCommandLineState extends JavaCommandLineState {
             params.getProgramParametersList().addParametersString(cfg.args);
         }
 
+        // Determine working directory for Build View descriptor
+        String workingDirectory = cfg.workingDir != null ? cfg.workingDir : getEnvironment().getProject().getBasePath();
+
         // Prepare per-run toolchain log server and pass port
         try {
-            var title = "Logs: " + cfg.getName();
-            logServer = new QilletniToolchainLogServer(getEnvironment().getProject(), title);
+            var title = "Building " + cfg.getName();
+            logServer = new QilletniBuildViewLogServer(getEnvironment().getProject(), title, workingDirectory != null ? workingDirectory : "");
             params.getProgramParametersList().add("--log-port");
             params.getProgramParametersList().add(Integer.toString(logServer.getPort()));
         } catch (Exception e) {
@@ -74,7 +77,7 @@ public final class QilletniCommandLineState extends JavaCommandLineState {
     protected com.intellij.execution.process.OSProcessHandler startProcess() throws ExecutionException {
         var handler = super.startProcess();
 
-        // Start pumping toolchain logs into the Logs tool window
+        // Start pumping toolchain logs into the Build View
         if (logServer != null) {
             logServer.attachTo(handler);
         }

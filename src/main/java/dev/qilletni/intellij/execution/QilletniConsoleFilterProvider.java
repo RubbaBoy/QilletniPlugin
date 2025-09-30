@@ -9,5 +9,5 @@ public final class QilletniConsoleFilterProvider implements ConsoleFilterProvide
     @Override
     public Filter @NotNull [] getDefaultFilters(@NotNull Project project) {
         return new Filter[]{ new QilletniOutputHyperlinkFilter(project) };
-        }
+    }
 }
