@@ -14,6 +14,7 @@ import com.intellij.codeInsight.lookup.LookupEx;
 import com.intellij.codeInsight.lookup.LookupEvent;
 import com.intellij.codeInsight.lookup.LookupListener;
 import com.intellij.openapi.actionSystem.CustomShortcutSet;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.codeInsight.lookup.LookupElement;
@@ -74,6 +75,8 @@ import javax.swing.KeyStroke;
  * - Top-level functions for bare calls
  */
 public final class QilletniCompletionContributor extends CompletionContributor {
+
+    private static final Logger LOG = Logger.getInstance(QilletniCompletionContributor.class);
 
     private static final class DotAfterExpressionCompletionProvider extends CompletionProvider<CompletionParameters> {
         @Override
@@ -312,6 +315,7 @@ public final class QilletniCompletionContributor extends CompletionContributor {
             }
             var musicCtx = ctxOpt.get();
             if (!SpotifyAuthService.getInstance().isSignedIn()) {
+                LOG.info("SpotifyMusicCompletion: not signed in, aborting");
                 return;
             }
 

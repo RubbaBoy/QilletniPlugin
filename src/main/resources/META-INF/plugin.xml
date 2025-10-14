@@ -55,6 +55,7 @@
 
         <lang.braceMatcher language="Qilletni" implementationClass="dev.qilletni.intellij.QilletniBraceMatcher"/>
         <lang.quoteHandler language="Qilletni" implementationClass="dev.qilletni.intellij.QilletniQuoteHandler"/>
+        <enterHandlerDelegate implementation="dev.qilletni.intellij.QilletniEnterHandler"/>
         <intentionAction>
             <language>Qilletni</language>
             <category>Qilletni</category>
@@ -111,7 +112,6 @@
                 nameKey="qilletni.inlay.receiverType.name"
                 providerId="qilletni.receiverType"/>
         <toolWindow id="Qilletni Libraries" factoryClass="dev.qilletni.intellij.library.ui.QilletniLibrariesToolWindowFactory" anchor="right" canCloseContents="false"/>
-        <toolWindow id="Qilletni Logs" factoryClass="dev.qilletni.intellij.logs.QilletniLogsToolWindowFactory" anchor="bottom" canCloseContents="true"/>
     </extensions>
 
     <actions>
