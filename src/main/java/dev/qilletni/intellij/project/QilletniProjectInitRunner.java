@@ -32,6 +32,7 @@ public final class QilletniProjectInitRunner {
                                         @NotNull String author,
                                         QilletniNewProjectWizardStep.ProjectType type,
                                         boolean includeNative,
+                                        String nativeInitClass,
                                         ProgressIndicator indicator) throws Exception {
         var sdkState = QilletniToolchainSettings.getInstance().getState();
         var sdkJar = sdkState != null ? sdkState.toolchainPath : null;
@@ -39,7 +40,7 @@ public final class QilletniProjectInitRunner {
             return new Result(false, -1, "Qilletni SDK JAR not configured. Configure it in Settings | Qilletni: Toolchain.");
         }
 
-        var cmd = buildJavaToolchainCommand(project, new File(sdkJar), buildInitArgs(targetDir, projectName, author, type, includeNative));
+        var cmd = buildJavaToolchainCommand(project, new File(sdkJar), buildInitArgs(targetDir, projectName, author, type, includeNative, nativeInitClass));
         var handler = new CapturingProcessHandler(cmd);
         if (indicator != null) indicator.setText("Running: " + cmd.getCommandLineString());
         ProcessOutput out = handler.runProcessWithProgressIndicator(indicator);
@@ -54,8 +55,9 @@ public final class QilletniProjectInitRunner {
                                          @NotNull String author,
                                          @NotNull QilletniNewProjectWizardStep.ProjectType type,
                                          boolean includeNative,
+                                         String nativeInitClass,
                                          ProgressIndicator indicator) throws Exception {
-        var result = runInitCapture(project, targetDir, projectName, author, type, includeNative, indicator);
+        var result = runInitCapture(project, targetDir, projectName, author, type, includeNative, nativeInitClass, indicator);
         SwingUtilities.invokeLater(() -> {
             var dlg = new QilletniInitLogDialog(result.success() ? "Qilletni Init Logs" : ("Qilletni init failed (" + result.exitCode() + ")"));
             dlg.append(result.output());
@@ -64,7 +66,7 @@ public final class QilletniProjectInitRunner {
         return result;
     }
 
-    private static List<String> buildInitArgs(Path targetDir, String name, String author, QilletniNewProjectWizardStep.ProjectType type, boolean includeNative) {
+    private static List<String> buildInitArgs(Path targetDir, String name, String author, QilletniNewProjectWizardStep.ProjectType type, boolean includeNative, String nativeInitClass) {
         var p = new ArrayList<String>();
         p.add("init");
         p.add(targetDir.toAbsolutePath().toString());
@@ -73,6 +75,9 @@ public final class QilletniProjectInitRunner {
         p.add("--type"); p.add(type.getCLIName());
         if (!includeNative) {
             p.add("--no-native");
+        } else if (nativeInitClass != null && !nativeInitClass.isBlank()) {
+            p.add("--native-class");
+            p.add(nativeInitClass);
         }
         return p;
     }

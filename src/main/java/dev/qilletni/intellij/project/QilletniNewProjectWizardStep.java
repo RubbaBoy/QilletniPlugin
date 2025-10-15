@@ -36,6 +36,8 @@ public final class QilletniNewProjectWizardStep extends AbstractNewProjectWizard
     private JRadioButton appRadio;
     private JRadioButton libRadio;
     private JCheckBox nativeToggle;
+    private com.intellij.ui.components.JBTextField nativeInitClassField;
+    private JPanel nativeInitPanel;
 
     public enum ProjectType {
         APPLICATION("application"),
@@ -81,6 +83,25 @@ public final class QilletniNewProjectWizardStep extends AbstractNewProjectWizard
             row.cell(nativeToggle);
             return kotlin.Unit.INSTANCE;
         });
+        // Native init class (FQCN) row, initially hidden
+        nativeInitClassField = new com.intellij.ui.components.JBTextField();
+        nativeInitClassField.getEmptyText().setText("e.g., com.example.NativeInitializer");
+        nativeInitPanel = new JPanel(new BorderLayout(8, 0));
+        nativeInitPanel.add(new JLabel("Native init class (FQCN):"), BorderLayout.WEST);
+        nativeInitPanel.add(nativeInitClassField, BorderLayout.CENTER);
+        nativeInitPanel.setVisible(false);
+        panel.row("", row -> {
+            row.cell(nativeInitPanel).align(AlignX.FILL).resizableColumn();
+            return kotlin.Unit.INSTANCE;
+        });
+        nativeToggle.addActionListener(e -> {
+            var visible = nativeToggle.isSelected();
+            nativeInitPanel.setVisible(visible);
+            if (visible) nativeInitClassField.requestFocusInWindow();
+            else nativeInitClassField.setText("");
+            nativeInitPanel.revalidate();
+            nativeInitPanel.repaint();
+        });
     }
 
 
@@ -92,7 +113,17 @@ public final class QilletniNewProjectWizardStep extends AbstractNewProjectWizard
         var author = authorField.getText().trim();
         var type = libRadio.isSelected() ? ProjectType.LIBRARY : ProjectType.APPLICATION;
         var includeNative = nativeToggle.isSelected();
+        String nativeInitClass = null;
+        if (includeNative) {
+            var text = nativeInitClassField != null ? nativeInitClassField.getText().trim() : "";
+            if (text.isEmpty() || !isValidJavaFqcn(text)) {
+                com.intellij.openapi.ui.Messages.showErrorDialog("Please enter a valid Java fully-qualified class name (no '$', identifiers separated by dots).", "Invalid Native Init Class");
+                return;
+            }
+            nativeInitClass = text;
+        }
 
+        final String nativeInitClassFinal = nativeInitClass;
         ProgressManager.getInstance().run(new Task.Modal(null, "Creating Qilletni Project", true) {
             @Override public void run(@NotNull ProgressIndicator indicator) {
                 try {
@@ -104,6 +135,7 @@ public final class QilletniNewProjectWizardStep extends AbstractNewProjectWizard
                             author,
                             type,
                             includeNative,
+                            nativeInitClassFinal,
                             indicator
                     );
                     var vf = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(baseDir.toFile());
@@ -190,5 +222,20 @@ public final class QilletniNewProjectWizardStep extends AbstractNewProjectWizard
                 model.commit();
             }
         });
+    }
+
+    private static boolean isValidJavaFqcn(String s) {
+        if (s == null || s.isBlank()) return false;
+        if (s.indexOf('$') >= 0) return false; // no inner class dollar signs allowed
+        var parts = s.split("\\.");
+        if (parts.length == 0) return false;
+        for (var p : parts) {
+            if (p.isEmpty()) return false;
+            if (!Character.isJavaIdentifierStart(p.charAt(0))) return false;
+            for (int i = 1; i < p.length(); i++) {
+                if (!Character.isJavaIdentifierPart(p.charAt(i))) return false;
+            }
+        }
+        return true;
     }
 }
