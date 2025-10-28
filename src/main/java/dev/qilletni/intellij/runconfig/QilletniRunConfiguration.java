@@ -27,6 +27,7 @@ public final class QilletniRunConfiguration extends RunConfigurationBase<Object>
     public Map<String, String> env = new HashMap<>();
     public String workingDir = "";
     public String toolchainOverride = "";
+    public boolean useNativeJar = false;
     /** Optional path to a local library directory. */
     public String localLibrary = "";
 
@@ -74,6 +75,7 @@ public final class QilletniRunConfiguration extends RunConfigurationBase<Object>
         args = JDOMExternalizerUtil.readField(element, "args", "");
         workingDir = JDOMExternalizerUtil.readField(element, "workingDir", "");
         toolchainOverride = JDOMExternalizerUtil.readField(element, "toolchainOverride", "");
+        useNativeJar = Boolean.parseBoolean(JDOMExternalizerUtil.readField(element, "useNativeJar", "false"));
         localLibrary = JDOMExternalizerUtil.readField(element, "localLibrary", "");
         // env is omitted for brevity; IDE serializes environment via EnvironmentVariablesComponent in editor
     }
@@ -85,6 +87,7 @@ public final class QilletniRunConfiguration extends RunConfigurationBase<Object>
         JDOMExternalizerUtil.writeField(element, "args", args);
         JDOMExternalizerUtil.writeField(element, "workingDir", workingDir);
         JDOMExternalizerUtil.writeField(element, "toolchainOverride", toolchainOverride);
+        JDOMExternalizerUtil.writeField(element, "buildJar", Boolean.toString(useNativeJar));
         JDOMExternalizerUtil.writeField(element, "localLibrary", localLibrary);
     }
 }

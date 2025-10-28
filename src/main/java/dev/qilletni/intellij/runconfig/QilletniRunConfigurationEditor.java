@@ -18,6 +18,7 @@ public final class QilletniRunConfigurationEditor extends SettingsEditor<Qilletn
     private JBTextField args;
     private TextFieldWithBrowseButton workingDir;
     private TextFieldWithBrowseButton localLibrary;
+    private JCheckBox useNativeJar;
     private EnvironmentVariablesComponent envComponent;
 
     public QilletniRunConfigurationEditor(Project project) {
@@ -30,6 +31,7 @@ public final class QilletniRunConfigurationEditor extends SettingsEditor<Qilletn
         args.setText(s.args);
         workingDir.setText(s.workingDir);
         localLibrary.setText(s.localLibrary);
+        if (useNativeJar != null) useNativeJar.setSelected(s.useNativeJar);
         envComponent.setEnvs(s.env);
     }
 
@@ -39,6 +41,7 @@ public final class QilletniRunConfigurationEditor extends SettingsEditor<Qilletn
         s.args = args.getText();
         s.workingDir = workingDir.getText();
         s.localLibrary = localLibrary.getText();
+        s.useNativeJar = useNativeJar.isSelected();
         s.env = envComponent.getEnvs();
     }
 
@@ -53,6 +56,7 @@ public final class QilletniRunConfigurationEditor extends SettingsEditor<Qilletn
         localLibrary = new TextFieldWithBrowseButton();
         localLibrary.addBrowseFolderListener(project, FileChooserDescriptorFactory.createSingleFolderDescriptor().withTitle("Local library"));
         envComponent = new EnvironmentVariablesComponent();
+        useNativeJar = new JCheckBox("Use Natve Jar");
 
         var row = 0;
         var gbc = new GridBagConstraints();
@@ -70,6 +74,9 @@ public final class QilletniRunConfigurationEditor extends SettingsEditor<Qilletn
 
         gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE; panel.add(new JLabel("Local library:"), gbc);
         gbc.gridx = 1; gbc.weightx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; panel.add(localLibrary, gbc); row++;
+
+        // Checkboxes (right column, fill horizontally)
+        gbc.gridx = 1; gbc.gridy = row; gbc.weightx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; panel.add(useNativeJar, gbc); row++;
 
         gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0; gbc.fill = GridBagConstraints.NONE; panel.add(new JLabel("Environment:"), gbc);
         gbc.gridx = 1; gbc.weightx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; panel.add(envComponent, gbc);

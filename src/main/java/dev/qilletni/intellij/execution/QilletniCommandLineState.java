@@ -46,6 +46,10 @@ public final class QilletniCommandLineState extends JavaCommandLineState {
             var absoluteLib = java.nio.file.Path.of(cfg.localLibrary).toAbsolutePath().normalize().toString();
             params.getProgramParametersList().add("--local-library");
             params.getProgramParametersList().add(absoluteLib);
+
+            if (cfg.useNativeJar) {
+                params.getProgramParametersList().add("--use-native-jar");
+            }
         }
         params.getProgramParametersList().add(cfg.targetPath);
 
