@@ -26,7 +26,7 @@ _qilletni_info.yml linking to their actual Java classes_
 ![](screenshots/ql_native_linking.png)
 ![](screenshots/java_native_linking.png)
 
-_Native Qilletni functions are linked to their Java implementations. Clicking on either will _
+_Native Qilletni functions are linked to their Java implementations. Clicking on either will direct focus to the other._
 
 <br/>
 
